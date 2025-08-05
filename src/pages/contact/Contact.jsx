@@ -12,28 +12,62 @@ import getToken from "../../utils/GetToken";
 import { exportToCSV } from "../../utils/exportToCSV";
 import Loader from "../../component/Loader";
 import ImportContactModal from "../../component/modal/ImportContactModal";
-// import { debounce } from "lodash"; // Add this line if lodash is installed
 
 const ITEMS_PER_PAGE = 5;
 
 const Contacts = () => {
     const token = getToken();
     const { userInfo, themeColor, secondaryThemeColor } = useContext(ContentContext);
+    const [activeTagIndex, setActiveTagIndex] = useState(0);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [importModal, setImportModal] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [selectedContactId, setSelectedContactId] = useState(null);
-    const [loading, setLoading] = useState(true); // loading true initially
+    const [loading, setLoading] = useState(true);
     const [contactToEdit, setContactToEdit] = useState(null);
     const [hoveredTagContact, setHoveredTagContact] = useState(null);
     const [newTag, setNewTag] = useState("");
     const [data, setData] = useState([]);
+    const [tags, setTags] = useState([]);
+    const [tagsLoading, setTagsLoading] = useState(false);
     const tagModalRef = useRef(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [debouncedSearch, setDebouncedSearch] = useState('');
     const [selectedChannel, setSelectedChannel] = useState('');
     const [previewContact, setPreviewContact] = useState(null);
+    const [hoveredTagIndex, setHoveredTagIndex] = useState(null);
+    const [tagSearch, setTagSearch] = useState('');
+    const [debouncedTagSearch, setDebouncedTagSearch] = useState('');
+
+    // 2. Debounce the tag search input:
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedTagSearch(tagSearch);
+        }, 400);
+        return () => clearTimeout(handler);
+    }, [tagSearch]);
+
+    // 3. Fetch tags when debouncedTagSearch changes:
+    useEffect(() => {
+        fetchTags(debouncedTagSearch);
+        // eslint-disable-next-line
+    }, [debouncedTagSearch]);
+
+    // Tag modal states
+    const [isTagModalOpen, setIsTagModalOpen] = useState(false);
+    const [newTagData, setNewTagData] = useState({
+        name: "",
+        description: "",
+        favicon: "👑"
+    });
+    const [tagLoading, setTagLoading] = useState(false);
+
+    // Tag delete modal states
+    const [deleteTagModal, setDeleteTagModal] = useState(false);
+    const [tagToDelete, setTagToDelete] = useState(null);
+
+    const iconList = ["👑", "⭐", "🔥", "💼", "🎯", "💎", "🛡️", "🚀", "🎉", "🏆"];
 
     const channels = userInfo?.companyId?.companyIntegratedChannels || [];
 
@@ -41,7 +75,7 @@ const Contacts = () => {
     useEffect(() => {
         const handler = setTimeout(() => {
             setDebouncedSearch(searchTerm);
-        }, 400); // 400ms debounce
+        }, 400);
         return () => clearTimeout(handler);
     }, [searchTerm]);
 
@@ -61,13 +95,24 @@ const Contacts = () => {
         if (showLoading) setLoading(false);
     };
 
-    // Initial fetch with loading
+    // Fetch tags
+    const fetchTags = async (search = "") => {
+        setTagsLoading(true);
+        const [responseData] = await useAxios("GET", `tags?search=${encodeURIComponent(search)}`, token);
+        if (responseData && responseData.data && Array.isArray(responseData.data.tags)) {
+            setTags(responseData.data.tags);
+        }
+        setTagsLoading(false);
+    };
+
+    // Initial fetch
     useEffect(() => {
         getContact('', '', true);
+        fetchTags();
         // eslint-disable-next-line
     }, []);
 
-    // Fetch on search/filter change (no loading spinner)
+    // Fetch on search/filter change
     useEffect(() => {
         getContact(debouncedSearch, selectedChannel, false);
         setCurrentPage(1);
@@ -93,10 +138,8 @@ const Contacts = () => {
 
     const handleImport = () => {
         setImportModal(!importModal);
-        // setContactToEdit(null);
     };
 
-    // Remove filteredData, use data directly
     const paginatedData = data.slice(
         (currentPage - 1) * ITEMS_PER_PAGE,
         currentPage * ITEMS_PER_PAGE
@@ -120,7 +163,6 @@ const Contacts = () => {
 
     const handleExport = () => {
         const headers = ["Name", "Client Email", "Phone", "Channel", "Tags"];
-
         const dataRows = data.map((user) => [
             `${user.firstName} ${user.lastName}`,
             user.clientEmail,
@@ -128,10 +170,8 @@ const Contacts = () => {
             user.channel,
             Array.isArray(user.tags) ? user.tags.join(" | ") : "",
         ]);
-
         exportToCSV("users.csv", headers, dataRows);
     };
-
 
     const handleTagHover = (contact, event) => {
         setHoveredTagContact(contact);
@@ -164,10 +204,8 @@ const Contacts = () => {
         if (!tag) return;
 
         try {
-            console.log("Adding tag:", tag);
             const updatedTags = [...(hoveredTagContact.tags || []), tag];
             const payload = { "tags": updatedTags };
-            console.log("hovered tag contact", hoveredTagContact);
             const [responseData] = await useAxios('PATCH', `contacts/${contactId}`, token, payload);
             if (responseData) {
                 setData(prevData =>
@@ -184,6 +222,24 @@ const Contacts = () => {
             }
         } catch (error) {
             toast.error("Failed to add tag", { autoClose: 2000 });
+        }
+    };
+
+    // Tag delete logic
+    const handleDeleteTag = async () => {
+        if (!tagToDelete) return;
+        try {
+            const [res] = await useAxios("DELETE", `tags/${tagToDelete._id}`, token);
+            if (res && res.success) {
+                toast.success("Tag deleted successfully!");
+                setDeleteTagModal(false);
+                setTagToDelete(null);
+                fetchTags();
+            } else {
+                toast.error("Failed to delete tag");
+            }
+        } catch (err) {
+            toast.error("Failed to delete tag");
         }
     };
 
@@ -215,14 +271,17 @@ const Contacts = () => {
                                     onMouseLeave={(e) => {
                                         e.currentTarget.style.backgroundColor = themeColor;
                                     }}
+                                    onClick={() => setIsTagModalOpen(true)}
                                 >
-                                    <Add fontSize="small" /> New 123
+                                    <Add fontSize="small" /> New
                                 </button>
                             </div>
                             <div className="relative">
                                 <input
                                     type="text"
                                     placeholder="Search groups..."
+                                    value={tagSearch}
+                                    onChange={e => setTagSearch(e.target.value)}
                                     className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg text-sm"
                                 />
                                 <Search className="absolute left-2.5 top-2.5 text-gray-400" fontSize="small" />
@@ -230,40 +289,50 @@ const Contacts = () => {
                         </div>
 
                         <div className="p-2 space-y-2">
-                            {[
-                                { name: "All Contacts", count: 1247, icon: <Group />, bg: "bg-blue-600", text: "text-white" },
-                                { name: "Customers", count: 856, icon: <Person />, text: "text-green-500" },
-                                { name: "Leads", count: 234, icon: <PersonAdd />, text: "text-yellow-500" },
-                                { name: "VIP", count: 89, icon: <EmojiEvents />, text: "text-purple-500" },
-                                { name: "Internal", count: 68, icon: <Business />, text: "text-blue-500" },
-                            ].map((group, index) => (
-                                <div
-                                    key={index}
-                                    className={`group-item rounded-lg p-3 cursor-pointer flex justify-between items-center ${index !== 0 ? "text-gray-900 hover:bg-gray-50" : ""}`}
-                                    style={
-                                        index === 0
-                                            ? {
-                                                backgroundColor: themeColor,
-                                                color: "#fff",
-                                            }
-                                            : {}
-                                    }
-                                    onMouseEnter={(e) => {
-                                        if (index === 0) e.currentTarget.style.backgroundColor = secondaryThemeColor;
-                                    }}
-                                    onMouseLeave={(e) => {
-                                        if (index === 0) e.currentTarget.style.backgroundColor = themeColor;
-                                    }}
-                                >
-                                    <div>
-                                        <h3 className={`font-medium ${group.text}`}>{group.name}</h3>
-                                        <p className={`text-sm ${group.text ? "opacity-80" : "text-gray-600"}`}>
-                                            {group.count} contacts
-                                        </p>
+                            
+                            {!tags.length ? (
+                                <div className="text-center text-gray-400 py-8 text-sm">No groups found</div>
+                            ) : (
+                                tags.map((group, index) => (
+                                    <div
+                                        key={index}
+                                        className={`group-item rounded-lg p-3 cursor-pointer flex justify-between items-center transition-colors duration-150 ${activeTagIndex === index
+                                                ? "bg-blue-600 text-white"
+                                                : "bg-white text-gray-900 hover:bg-gray-50"
+                                            }`}
+                                        onClick={() => setActiveTagIndex(index)}
+                                        onMouseEnter={() => setHoveredTagIndex(index)}
+                                        onMouseLeave={() => setHoveredTagIndex(null)}
+                                    >
+                                        <div>
+                                            <h3 className="font-medium">{group.name}</h3>
+                                            <p className={`text-sm ${activeTagIndex === index ? "text-white" : "text-gray-600"}`}>
+                                                {group.contactCount} contacts
+                                            </p>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            {hoveredTagIndex === index && (
+                                                <span
+                                                    className="ml-2"
+                                                    onClick={e => {
+                                                        e.stopPropagation();
+                                                        setTagToDelete(group);
+                                                        setDeleteTagModal(true);
+                                                    }}
+                                                    onMouseEnter={e => (e.currentTarget.style.color = "#ef4444")}
+                                                    onMouseLeave={e => (e.currentTarget.style.color = "")}
+                                                >
+                                                    <Delete
+                                                        fontSize="small"
+                                                        className="cursor-pointer"
+                                                    />
+                                                </span>
+                                            )}
+                                            <span>{group.favicon}</span>
+                                        </div>
                                     </div>
-                                    <div className={`${group.text}`}>{group.icon}</div>
-                                </div>
-                            ))}
+                                ))
+                            )}
                         </div>
                     </div>
                 </div>
@@ -364,10 +433,10 @@ const Contacts = () => {
                                                 </h1>
                                             </td>
                                             <td className="px-4 py-4 text-gray-900">
-    <span className="block max-w-[100px] truncate whitespace-nowrap overflow-hidden">
-        {contact.firstName || "--"}
-    </span>
-</td>
+                                                <span className="block max-w-[100px] truncate whitespace-nowrap overflow-hidden">
+                                                    {contact.firstName || "--"}
+                                                </span>
+                                            </td>
                                             <td className="px-4 py-4 text-gray-900">
                                                 <span className="block max-w-[100px] truncate whitespace-nowrap overflow-hidden">
                                                     {contact.phoneNumber || "--"}
@@ -399,8 +468,8 @@ const Contacts = () => {
                                                             <span
                                                                 key={idx}
                                                                 className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${tag === 'Active'
-                                                                        ? 'bg-green-100 text-green-800'
-                                                                        : 'bg-blue-100 text-blue-800'
+                                                                    ? 'bg-green-100 text-green-800'
+                                                                    : 'bg-blue-100 text-blue-800'
                                                                     }`}
                                                             >
                                                                 {tag}
@@ -419,10 +488,10 @@ const Contacts = () => {
                                             <td className="px-4 py-4">
                                                 <div className="flex space-x-2">
                                                     <Visibility
-    fontSize="small"
-    className="text-blue-600 hover:text-blue-800 cursor-pointer"
-    onClick={() => setPreviewContact(contact)}
-/>
+                                                        fontSize="small"
+                                                        className="text-blue-600 hover:text-blue-800 cursor-pointer"
+                                                        onClick={() => setPreviewContact(contact)}
+                                                    />
                                                     <Edit
                                                         fontSize="small"
                                                         className="text-green-600 hover:text-green-800 cursor-pointer"
@@ -483,22 +552,56 @@ const Contacts = () => {
                 </div>
             </div>
 
+            {/* Tag Delete Confirmation Modal */}
+            {deleteTagModal && tagToDelete && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center">
+                    <div
+                        className="fixed inset-0 bg-black opacity-70"
+                        onClick={() => setDeleteTagModal(false)}
+                    ></div>
+                    <div className="bg-white rounded-lg max-w-sm w-full p-6 relative z-50 mx-4" onClick={e => e.stopPropagation()}>
+                        <div className="flex justify-between items-center mb-4">
+                            <h4 className="font-medium text-lg">Delete Tag</h4>
+                            <button
+                                onClick={() => setDeleteTagModal(false)}
+                                className="text-gray-500 hover:text-gray-700"
+                            >
+                                <Close fontSize="small" />
+                            </button>
+                        </div>
+                        <div className="mb-4">
+                            Are you sure you want to delete the tag <span className="font-semibold">{tagToDelete.name}</span>?
+                        </div>
+                        <div className="flex justify-end gap-2">
+                            <button
+                                className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+                                onClick={() => setDeleteTagModal(false)}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                                onClick={handleDeleteTag}
+                            >
+                                Yes, Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Tag Modal */}
             {hoveredTagContact && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center">
-                    {/* Backdrop */}
                     <div
                         className="fixed inset-0 bg-black opacity-70"
                         onClick={() => setHoveredTagContact(null)}
                     ></div>
-
-                    {/* Modal Content */}
                     <div
                         ref={tagModalRef}
                         className="bg-white rounded-lg max-w-md w-full p-6 relative z-50 mx-4"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        {/* Header */}
                         <div className="flex justify-between items-center mb-4">
                             <h4 className="font-medium text-lg">Manage Tags</h4>
                             <button
@@ -508,8 +611,6 @@ const Contacts = () => {
                                 <Close fontSize="small" />
                             </button>
                         </div>
-
-                        {/* Tags */}
                         <div className="mb-3 max-h-40 overflow-y-auto">
                             {hoveredTagContact.tags?.length > 0 ? (
                                 <div className="flex flex-wrap gap-2">
@@ -531,8 +632,6 @@ const Contacts = () => {
                                 <p className="text-gray-500 text-sm">No tags yet</p>
                             )}
                         </div>
-
-                        {/* Input */}
                         <div className="flex">
                             <input
                                 type="text"
@@ -552,9 +651,6 @@ const Contacts = () => {
                     </div>
                 </div>
             )}
-
-            
-
 
             {isModalOpen && (
                 <CreateContact
@@ -596,6 +692,92 @@ const Contacts = () => {
                             <div><strong>Business:</strong> {previewContact.clientBusinessDetail}</div>
                             <div><strong>Tags:</strong> {Array.isArray(previewContact.tags) && previewContact.tags.length > 0 ? previewContact.tags.join(", ") : "--"}</div>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {isTagModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center">
+                    <div
+                        className="fixed inset-0 bg-black opacity-70"
+                        onClick={() => setIsTagModalOpen(false)}
+                    ></div>
+                    <div className="bg-white rounded-lg max-w-md w-full p-6 relative z-50 mx-4" onClick={e => e.stopPropagation()}>
+                        <div className="flex justify-between items-center mb-4">
+                            <h4 className="font-medium text-lg">Add New Tag</h4>
+                            <button
+                                onClick={() => setIsTagModalOpen(false)}
+                                className="text-gray-500 hover:text-gray-700"
+                            >
+                                <Close fontSize="small" />
+                            </button>
+                        </div>
+                        <form
+                            className="space-y-4"
+                            onSubmit={async (e) => {
+                                e.preventDefault();
+                                setTagLoading(true);
+                                const [res, err] = await useAxios(
+                                    "POST",
+                                    "tags",
+                                    token,
+                                    newTagData
+                                );
+                                setTagLoading(false);
+                                if (res && res.success) {
+                                    toast.success("Tag added successfully!");
+                                    setIsTagModalOpen(false);
+                                    setNewTagData({ name: "", description: "", favicon: "👑" });
+                                    fetchTags();
+                                } else {
+                                    toast.error(err?.message || "Failed to add tag");
+                                }
+                            }}
+                        >
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Name</label>
+                                <input
+                                    type="text"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                                    value={newTagData.name}
+                                    onChange={e => setNewTagData(d => ({ ...d, name: e.target.value }))}
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Description</label>
+                                <input
+                                    type="text"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                                    value={newTagData.description}
+                                    onChange={e => setNewTagData(d => ({ ...d, description: e.target.value }))}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Icon</label>
+                                <div className="flex flex-wrap gap-2">
+                                    {iconList.map(icon => (
+                                        <button
+                                            type="button"
+                                            key={icon}
+                                            className={`text-2xl p-1 rounded ${newTagData.favicon === icon ? "bg-blue-100 border border-blue-400" : "hover:bg-gray-100"}`}
+                                            onClick={() => setNewTagData(d => ({ ...d, favicon: icon }))}
+                                        >
+                                            {icon}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="flex justify-end">
+                                <button
+                                    type="submit"
+                                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                                    disabled={tagLoading}
+                                >
+                                    {tagLoading ? "Adding..." : "Add Tag"}
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             )}
