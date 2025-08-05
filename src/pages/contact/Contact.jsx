@@ -143,9 +143,10 @@ const Contacts = () => {
         if (!tag) return;
 
         try {
+            console.log("Adding tag:", tag);
             const updatedTags = [...(hoveredTagContact.tags || []), tag];
-            const payload = { tags: updatedTags };
-
+            const payload = { "tags": updatedTags };
+            console.log("hovered tag contact", hoveredTagContact);
             const [responseData] = await useAxios('PATCH', `contacts/${contactId}`, token, payload);
             if (responseData) {
                 setData(prevData =>
@@ -173,7 +174,7 @@ const Contacts = () => {
     return (
         <div className="min-h-screen mt-16 bg-gray-50 font-sans">
             <div className="mb-6 p-3">
-                <h1 className="text-2xl font-bold text-gray-900">Contact Management</h1>
+                <h1 className="text-2xl font-bold text-gray-900">Contact Management 123</h1>
                 <p className="text-gray-600">Manage your contact groups and individual contacts</p>
             </div>
 
@@ -498,7 +499,7 @@ const Contacts = () => {
                                 type="text"
                                 value={newTag}
                                 onChange={(e) => setNewTag(e.target.value)}
-                                placeholder="Add new tag"
+                                placeholder="Add new tag we23"
                                 className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-l focus:outline-none focus:ring-1 focus:ring-blue-500"
                                 onKeyPress={(e) => e.key === 'Enter' && addTag(hoveredTagContact._id)}
                             />
@@ -506,7 +507,7 @@ const Contacts = () => {
                                 onClick={() => addTag(hoveredTagContact._id)}
                                 className="px-3 py-2 text-sm bg-blue-500 text-white rounded-r hover:bg-blue-600"
                             >
-                                Add
+                                Add 123
                             </button>
                         </div>
                     </div>
