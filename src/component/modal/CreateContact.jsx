@@ -5,7 +5,7 @@ import { ContentContext } from '../../context/ContextProvider';
 import getToken from '../../utils/GetToken';
 import useAxios from '../../utils/useAxios';
 
-function CreateContact({ toggleModal, contactToEdit = null }) {
+function CreateContact({ toggleModal, contactToEdit = null, refreshContacts }) {
   const { userInfo } = useContext(ContentContext);
   const token = getToken();
 
@@ -160,6 +160,9 @@ function CreateContact({ toggleModal, contactToEdit = null }) {
       const [responseData, fetchError] = await useAxios(method, url, token, fullData);
 
       if (responseData) {
+        if (refreshContacts) {
+          refreshContacts();
+        }
         toast.success(`Contact ${contactToEdit ? 'updated' : 'created'} successfully!`, { autoClose: 2000 });
         toggleModal();
       } else {
@@ -177,11 +180,10 @@ function CreateContact({ toggleModal, contactToEdit = null }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="fixed inset-0 bg-black opacity-70" onClick={toggleModal}></div>
-
-      <div
-        className="bg-white h-[90%] overflow-auto rounded-lg max-w-md w-full p-6 relative z-50 mx-4"
-        onClick={(e) => e.stopPropagation()}
-      >
+<div
+  className="bg-white max-h-[80vh] overflow-y-auto rounded-lg max-w-md w-full p-6 relative z-50 mx-4"
+  onClick={(e) => e.stopPropagation()}
+>
         <div className="flex justify-between items-center border-b pb-3 mb-4">
           <h3 className="text-lg font-semibold text-gray-900">
             {contactToEdit ? 'Edit Contact' : 'Add New Contact'}
@@ -307,8 +309,8 @@ function CreateContact({ toggleModal, contactToEdit = null }) {
               <button
                 type="button"
                 className={`px-3 py-1.5 text-sm rounded-r-lg ${isFormDisabled
-                    ? 'bg-gray-200 cursor-not-allowed'
-                    : 'bg-blue-200 hover:bg-blue-300'
+                  ? 'bg-gray-200 cursor-not-allowed'
+                  : 'bg-blue-200 hover:bg-blue-300'
                   }`}
                 onClick={handleAddTag}
                 disabled={isFormDisabled}

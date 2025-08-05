@@ -12,6 +12,7 @@ import getToken from "../../utils/GetToken";
 import { exportToCSV } from "../../utils/exportToCSV";
 import Loader from "../../component/Loader";
 import ImportContactModal from "../../component/modal/ImportContactModal";
+// import { debounce } from "lodash"; // Add this line if lodash is installed
 
 const ITEMS_PER_PAGE = 5;
 
@@ -23,30 +24,55 @@ const Contacts = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [selectedContactId, setSelectedContactId] = useState(null);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true); // loading true initially
     const [contactToEdit, setContactToEdit] = useState(null);
     const [hoveredTagContact, setHoveredTagContact] = useState(null);
     const [newTag, setNewTag] = useState("");
     const [data, setData] = useState([]);
     const tagModalRef = useRef(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
     const [selectedChannel, setSelectedChannel] = useState('');
+    const [previewContact, setPreviewContact] = useState(null);
 
     const channels = userInfo?.companyId?.companyIntegratedChannels || [];
 
+    // Debounce searchTerm
     useEffect(() => {
-        setLoading(true);
-        const getContact = async () => {
-            const [responseData, fetchError] = await useAxios('GET', 'contacts', token, null);
-            if (responseData) {
-                setData(responseData.data.contacts);
-            } else {
-                console.log(fetchError);
-            }
-            setLoading(false);
-        };
-        getContact();
+        const handler = setTimeout(() => {
+            setDebouncedSearch(searchTerm);
+        }, 400); // 400ms debounce
+        return () => clearTimeout(handler);
+    }, [searchTerm]);
+
+    // Fetch contacts
+    const getContact = async (search = '', channel = '', showLoading = false) => {
+        if (showLoading) setLoading(true);
+        const params = [];
+        if (search) params.push(`search=${encodeURIComponent(search)}`);
+        if (channel) params.push(`channel=${encodeURIComponent(channel)}`);
+        const query = params.length ? `?${params.join('&')}` : '';
+        const [responseData, fetchError] = await useAxios('GET', `contacts${query}`, token, null);
+        if (responseData) {
+            setData(responseData.data.contacts);
+        } else {
+            console.log(fetchError);
+        }
+        if (showLoading) setLoading(false);
+    };
+
+    // Initial fetch with loading
+    useEffect(() => {
+        getContact('', '', true);
+        // eslint-disable-next-line
     }, []);
+
+    // Fetch on search/filter change (no loading spinner)
+    useEffect(() => {
+        getContact(debouncedSearch, selectedChannel, false);
+        setCurrentPage(1);
+        // eslint-disable-next-line
+    }, [debouncedSearch, selectedChannel]);
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -70,13 +96,8 @@ const Contacts = () => {
         // setContactToEdit(null);
     };
 
-    const filteredData = data.filter((contact) => {
-        const matchesPhone = contact.phoneNumber?.includes(searchTerm);
-        const matchesChannel = selectedChannel ? contact.channel === selectedChannel : true;
-        return matchesPhone && matchesChannel;
-    });
-
-    const paginatedData = filteredData.slice(
+    // Remove filteredData, use data directly
+    const paginatedData = data.slice(
         (currentPage - 1) * ITEMS_PER_PAGE,
         currentPage * ITEMS_PER_PAGE
     );
@@ -156,6 +177,7 @@ const Contacts = () => {
                             : contact
                     )
                 );
+                getContact(debouncedSearch, selectedChannel, false);
                 setHoveredTagContact(prev => ({ ...prev, tags: updatedTags }));
                 setNewTag("");
                 toast.success("Tag added successfully", { autoClose: 2000 });
@@ -165,7 +187,7 @@ const Contacts = () => {
         }
     };
 
-    const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
+    const totalPages = Math.ceil(data.length / ITEMS_PER_PAGE);
 
     if (loading) {
         return <Loader />;
@@ -194,7 +216,7 @@ const Contacts = () => {
                                         e.currentTarget.style.backgroundColor = themeColor;
                                     }}
                                 >
-                                    <Add fontSize="small" /> New
+                                    <Add fontSize="small" /> New 123
                                 </button>
                             </div>
                             <div className="relative">
@@ -264,13 +286,11 @@ const Contacts = () => {
                                     className="px-3 py-2 border border-gray-300 rounded-lg"
                                 >
                                     <option value="">All Channels</option>
-                                    {channels
-                                        .filter((ch) => ch.type !== 'webchat')
-                                        .map((ch) => (
-                                            <option key={ch._id} value={ch.type}>
-                                                {ch.type.charAt(0).toUpperCase() + ch.type.slice(1)}
-                                            </option>
-                                        ))}
+                                    {channels.map((ch) => (
+                                        <option key={ch._id} value={ch.type}>
+                                            {ch.type.charAt(0).toUpperCase() + ch.type.slice(1)}
+                                        </option>
+                                    ))}
                                 </select>
 
                             </div>
@@ -302,7 +322,7 @@ const Contacts = () => {
                             </div>
                         </div>
 
-                        <div className="overflow-x-auto w-[285px] md:w-[740px]">
+                        <div className="overflow-x-auto">
                             <table className="w-full">
                                 <thead className="bg-gray-50">
                                     <tr>
@@ -344,13 +364,19 @@ const Contacts = () => {
                                                 </h1>
                                             </td>
                                             <td className="px-4 py-4 text-gray-900">
-                                                {contact.firstName ? contact.firstName.slice(0, 6) : "--"}
-                                            </td>
+    <span className="block max-w-[100px] truncate whitespace-nowrap overflow-hidden">
+        {contact.firstName || "--"}
+    </span>
+</td>
                                             <td className="px-4 py-4 text-gray-900">
-                                                {contact.phoneNumber ? contact.phoneNumber.slice(0, 17) : "--"}
+                                                <span className="block max-w-[100px] truncate whitespace-nowrap overflow-hidden">
+                                                    {contact.phoneNumber || "--"}
+                                                </span>
                                             </td>
                                             <td className="px-4 py-4 text-gray-600">
-                                                {contact.clientEmail ? contact.clientEmail.slice(0, 14) : "--"}
+                                                <span className="block max-w-[150px] truncate whitespace-nowrap overflow-hidden">
+                                                    {contact.clientEmail || "--"}
+                                                </span>
                                             </td>
                                             <td
                                                 className={`px-4 py-4 ${contact.channel === 'twilio' ? 'text-blue-500' :
@@ -366,16 +392,25 @@ const Contacts = () => {
                                                     <div
                                                         className="flex flex-wrap gap-1"
                                                         onClick={(e) => handleTagHover(contact, e)}
+                                                        style={{ cursor: "pointer" }}
+                                                        title={contact.tags.join(", ")}
                                                     >
-                                                        <span
-                                                            className={`cursor-pointer inline-flex px-2 py-1 rounded-full text-xs font-medium ${contact.tags[0] === 'Active' ?
-                                                                'bg-green-100 text-green-800' :
-                                                                'bg-blue-100 text-blue-800'
-                                                                }`}
-                                                        >
-                                                            {contact.tags[0].slice(0, 4)}
-                                                            {contact.tags.length > 1 && " +" + (contact.tags.length - 1)}
-                                                        </span>
+                                                        {contact.tags.slice(0, 2).map((tag, idx) => (
+                                                            <span
+                                                                key={idx}
+                                                                className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${tag === 'Active'
+                                                                        ? 'bg-green-100 text-green-800'
+                                                                        : 'bg-blue-100 text-blue-800'
+                                                                    }`}
+                                                            >
+                                                                {tag}
+                                                            </span>
+                                                        ))}
+                                                        {contact.tags.length > 2 && (
+                                                            <span className="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                                                +{contact.tags.length - 2}
+                                                            </span>
+                                                        )}
                                                     </div>
                                                 ) : (
                                                     <span className="text-gray-500 cursor-pointer" onClick={(e) => handleTagHover(contact, e)}>--</span>
@@ -383,7 +418,11 @@ const Contacts = () => {
                                             </td>
                                             <td className="px-4 py-4">
                                                 <div className="flex space-x-2">
-                                                    <Visibility fontSize="small" className="text-blue-600 hover:text-blue-800 cursor-pointer" />
+                                                    <Visibility
+    fontSize="small"
+    className="text-blue-600 hover:text-blue-800 cursor-pointer"
+    onClick={() => setPreviewContact(contact)}
+/>
                                                     <Edit
                                                         fontSize="small"
                                                         className="text-green-600 hover:text-green-800 cursor-pointer"
@@ -507,16 +546,22 @@ const Contacts = () => {
                                 onClick={() => addTag(hoveredTagContact._id)}
                                 className="px-3 py-2 text-sm bg-blue-500 text-white rounded-r hover:bg-blue-600"
                             >
-                                Add 123
+                                Add
                             </button>
                         </div>
                     </div>
                 </div>
             )}
 
+            
+
 
             {isModalOpen && (
-                <CreateContact toggleModal={toggleModal} contactToEdit={contactToEdit} />
+                <CreateContact
+                    toggleModal={toggleModal}
+                    contactToEdit={contactToEdit}
+                    refreshContacts={() => getContact(debouncedSearch, selectedChannel, false)}
+                />
             )}
 
             {showDeleteModal && (
@@ -525,6 +570,34 @@ const Contacts = () => {
 
             {importModal && (
                 <ImportContactModal onClose={() => setImportModal(false)} />
+            )}
+
+            {previewContact && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center">
+                    <div
+                        className="fixed inset-0 bg-black opacity-70"
+                        onClick={() => setPreviewContact(null)}
+                    ></div>
+                    <div className="bg-white rounded-lg max-w-md w-full p-6 relative z-50 mx-4" onClick={e => e.stopPropagation()}>
+                        <div className="flex justify-between items-center mb-4">
+                            <h4 className="font-medium text-lg">Contact Preview</h4>
+                            <button
+                                onClick={() => setPreviewContact(null)}
+                                className="text-gray-500 hover:text-gray-700"
+                            >
+                                <Close fontSize="small" />
+                            </button>
+                        </div>
+                        <div className="space-y-2">
+                            <div><strong>Name:</strong> {previewContact.firstName} {previewContact.lastName}</div>
+                            <div><strong>Email:</strong> {previewContact.clientEmail}</div>
+                            <div><strong>Phone:</strong> {previewContact.phoneNumber}</div>
+                            <div><strong>Channel:</strong> {previewContact.channel}</div>
+                            <div><strong>Business:</strong> {previewContact.clientBusinessDetail}</div>
+                            <div><strong>Tags:</strong> {Array.isArray(previewContact.tags) && previewContact.tags.length > 0 ? previewContact.tags.join(", ") : "--"}</div>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );
