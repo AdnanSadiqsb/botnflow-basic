@@ -252,7 +252,7 @@ const Contacts = () => {
     return (
         <div className="min-h-screen mt-16 bg-gray-50 font-sans">
             <div className="mb-6 p-3">
-                <h1 className="text-2xl font-bold text-gray-900">Contact Management 123</h1>
+                <h1 className="text-2xl font-bold text-gray-900">Contact Management</h1>
                 <p className="text-gray-600">Manage your contact groups and individual contacts</p>
             </div>
 
