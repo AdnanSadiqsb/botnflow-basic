@@ -49,8 +49,6 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^16.2.0",
-    "vite": "^7.0.6",
-    "vite-plugin-inspect": "^11.3.2",
-    "vite-plugin-open-in-editor": "^0.0.4"
+    "vite": "^7.0.6"
   }
 }
