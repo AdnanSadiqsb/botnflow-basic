@@ -336,6 +336,7 @@ const Contacts = () => {
                         </div>
                     </div>
                 </div>
+                {/* file chnage */}
 
                 <div className="md:flex-3 flex-2 mt-3 md:mt-0">
                     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
@@ -367,11 +368,15 @@ const Contacts = () => {
                                 <div className="flex gap-2">
                                     <button
                                         className="px-3 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-1"
-                                        onClick={handleExport}
+                                        onClick={handleImport}
                                     >
+
                                         <Download fontSize="small" /> Import
                                     </button>
-                                    <button className="px-3 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-1" onClick={handleImport}>
+                                    <button className="px-3 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-1" 
+                                  
+                                        onClick={handleExport}
+                                    >
                                         <Upload fontSize="small" /> Export
                                     </button>
                                 </div>
