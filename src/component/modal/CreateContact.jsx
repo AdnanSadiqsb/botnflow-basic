@@ -263,7 +263,7 @@ function CreateContact({ toggleModal, contactToEdit = null, refreshContacts }) {
         ...rest,
         phoneNumber: formattedPhone,
         clientBusinessDetail: companyName,
-        tags: selectedTags.map(tag => tag._id) // Send only tag IDs
+       tags: selectedTags.map(tag => tag.name) // Send only tag name
       };
     } else {
       const selectedChannel = channels.find((ch) => ch.type === channel);
@@ -272,7 +272,7 @@ function CreateContact({ toggleModal, contactToEdit = null, refreshContacts }) {
         phoneNumber: formattedPhone,
         channelId: selectedChannel?.channelId || null,
         clientBusinessDetail: companyName,
-        tags: selectedTags.map(tag => tag._id) // Send only tag IDs
+       tags: selectedTags.map(tag => tag.name) // Send only tag name
       };
     }
 
