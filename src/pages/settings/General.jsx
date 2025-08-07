@@ -163,6 +163,9 @@ function General() {
             if (responseData && responseData.success) {
                 toast.success("Company deactivated. You will be logged out.", { autoClose: 2000 });
                 setShowDeactivateModal(false);
+
+                getUserInfo();
+                localStorage.removeItem('token');
                 navigate("/");
             } else {
                 toast.error("Failed to deactivate company", { autoClose: 2000 });

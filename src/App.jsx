@@ -21,10 +21,12 @@ function AppContent() {
   const [showSidebar, setShowSidebar] = useState(true);
   const [isSidebarHovered, setIsSidebarHovered] = useState(false);
   const [screenSize, setScreenSize] = useState('desktop');
-  const { setUserInfo, customizationModal, setCustomizationModal } = useContext(ContentContext);
+  const { setUserInfo, customizationModal, userInfo, setCustomizationModal } = useContext(ContentContext);
 
   const validToken = isTokenValid(token);
 
+  const isActiveCompany = userInfo?.companyId?.isActive;
+  console.log("isActiveCompany", isActiveCompany);
   useEffect(() => {
     const handleResize = () => {
       const width = window.innerWidth;
@@ -95,6 +97,40 @@ function AppContent() {
 
   return (
     <>
+      {/* Show Activate Company modal if company is not active */}
+      {token &&isActiveCompany === false && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-40"></div>
+          <div className="bg-white rounded-lg max-w-md w-full p-6 relative z-50 mx-4" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-4">
+              <h4 className="font-medium text-lg text-blue-600">Activate Company</h4>
+            </div>
+            <div className="mb-4 text-gray-700">
+              Your company is currently deactivated.<br />
+              Click below to activate your company and regain access.
+            </div>
+            <div className="flex justify-end gap-2">
+              <button
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                onClick={async () => {
+                  const [responseData, fetchError] = await useAxios('PATCH', 'companies/toggle-deletion', token, {});
+                  if (responseData && responseData.success) {
+                    toast.success("Company activated!", { autoClose: 2000 });
+                    // Refresh user info
+                    const [userData] = await useAxios('GET', 'users', token);
+                    if (userData) setUserInfo(userData.data.user);
+                  } else {
+                    toast.error("Failed to activate company", { autoClose: 2000 });
+                  }
+                }}
+              >
+                Activate Company
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {(screenSize === 'mobile' || screenSize === 'small-laptop') && showSidebar && (
         <div
           className="fixed inset-0 z-30 bg-gray-200 opacity-50"
