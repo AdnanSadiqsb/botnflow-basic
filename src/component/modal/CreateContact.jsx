@@ -5,6 +5,119 @@ import { ContentContext } from '../../context/ContextProvider';
 import getToken from '../../utils/GetToken';
 import useAxios from '../../utils/useAxios';
 
+// First define the MultiSelectTags component
+const MultiSelectTags = ({
+  initialSelectedTags = [],
+  onTagsChange,
+  availableTags = [],
+  isLoading = false,
+  placeholder = "Select tags...",
+  noOptionsMessage = "No tags available",
+  loadingMessage = "Loading tags...",
+  disabled = false
+}) => {
+  const [selectedTags, setSelectedTags] = useState(initialSelectedTags);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  // Sync with parent when initialSelectedTags changes
+  useEffect(() => {
+    setSelectedTags(initialSelectedTags);
+  }, [initialSelectedTags]);
+
+  const filteredTags = availableTags.filter(tag => 
+    tag.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+    !selectedTags.some(selected => selected._id === tag._id)
+  );
+
+  const handleTagSelect = (tag) => {
+    const newSelectedTags = [...selectedTags, tag];
+    setSelectedTags(newSelectedTags);
+    onTagsChange(newSelectedTags);
+    setSearchTerm('');
+  };
+
+  const handleTagRemove = (tagId) => {
+    const newSelectedTags = selectedTags.filter(tag => tag._id !== tagId);
+    setSelectedTags(newSelectedTags);
+    onTagsChange(newSelectedTags);
+  };
+
+  return (
+    <div className="relative w-full">
+      <div className={`flex flex-wrap items-center gap-2 p-2 border ${isDropdownOpen ? 'border-blue-500' : 'border-gray-300'} rounded-lg bg-white min-h-12 transition-colors ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}>
+        {selectedTags.map(tag => (
+          <div 
+            key={tag._id} 
+            className="flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
+          >
+            <span>{tag.favicon}</span>
+            <span>{tag.name}</span>
+            <button 
+              onClick={(e) => {
+                e.preventDefault();
+                handleTagRemove(tag._id);
+              }}
+              className="ml-1 text-blue-500 hover:text-blue-700 focus:outline-none"
+              disabled={disabled}
+            >
+              ×
+            </button>
+          </div>
+        ))}
+        
+        {!disabled && (
+          <div className="relative flex-1 min-w-[120px]">
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setIsDropdownOpen(true);
+              }}
+              onFocus={() => setIsDropdownOpen(true)}
+              onBlur={() => setTimeout(() => setIsDropdownOpen(false), 200)}
+              placeholder={selectedTags.length === 0 ? placeholder : ""}
+              className="w-full p-1 outline-none bg-transparent"
+              disabled={disabled}
+            />
+            
+            {isDropdownOpen && (
+              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto">
+                {isLoading ? (
+                  <div className="p-2 text-gray-500">{loadingMessage}</div>
+                ) : filteredTags.length === 0 ? (
+                  <div className="p-2 text-gray-500">
+                    {searchTerm ? noOptionsMessage : noOptionsMessage}
+                  </div>
+                ) : (
+                  filteredTags.map(tag => (
+                    <button
+                      key={tag._id}
+                      type="button"
+                      onClick={() => handleTagSelect(tag)}
+                      className="w-full text-left flex items-center p-2 hover:bg-gray-100 cursor-pointer"
+                    >
+                      <span className="mr-2">{tag.favicon}</span>
+                      <div>
+                        <div className="font-medium">{tag.name}</div>
+                        {tag.description && (
+                          <div className="text-xs text-gray-500">{tag.description}</div>
+                        )}
+                      </div>
+                    </button>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Then define the CreateContact component
 function CreateContact({ toggleModal, contactToEdit = null, refreshContacts }) {
   const { userInfo } = useContext(ContentContext);
   const token = getToken();
@@ -14,6 +127,10 @@ function CreateContact({ toggleModal, contactToEdit = null, refreshContacts }) {
 
   const [loading, setLoading] = useState(false);
   const [tagInput, setTagInput] = useState('');
+  const [availableTags, setAvailableTags] = useState([]);
+  const [isLoadingTags, setIsLoadingTags] = useState(false);
+  const [selectedTags, setSelectedTags] = useState([]);
+
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -24,6 +141,25 @@ function CreateContact({ toggleModal, contactToEdit = null, refreshContacts }) {
     channel: '',
     tags: [],
   });
+
+  const fetchTags = async (search = "") => {
+    setIsLoadingTags(true);
+    try {
+      const [responseData] = await useAxios("GET", `tags`, token);
+      if (responseData && responseData.data && Array.isArray(responseData.data.tags)) {
+        setAvailableTags(responseData.data.tags);
+      }
+    } catch (error) {
+      console.error("Error fetching tags:", error);
+    } finally {
+      setIsLoadingTags(false);
+    }
+  };
+
+  // Initial fetch
+  useEffect(() => {
+    fetchTags();
+  }, []);
 
   useEffect(() => {
     if (contactToEdit) {
@@ -37,6 +173,11 @@ function CreateContact({ toggleModal, contactToEdit = null, refreshContacts }) {
         channel: contactToEdit.channel || '',
         tags: contactToEdit.tags || [],
       });
+      
+      // Set the selected tags if they exist in the contact being edited
+      if (contactToEdit.tags && Array.isArray(contactToEdit.tags)) {
+        setSelectedTags(contactToEdit.tags);
+      }
     }
   }, [contactToEdit]);
 
@@ -93,26 +234,8 @@ function CreateContact({ toggleModal, contactToEdit = null, refreshContacts }) {
     }
   };
 
-  const handleAddTag = () => {
-    const newTag = tagInput.trim();
-    if (newTag && !formData.tags.includes(newTag)) {
-      setFormData(prev => ({
-        ...prev,
-        tags: [...prev.tags, newTag]
-      }));
-      setTagInput('');
-    }
-  };
-
-  const handleRemoveTag = (index) => {
-    setFormData(prev => ({
-      ...prev,
-      tags: prev.tags.filter((_, i) => i !== index)
-    }));
-  };
-
   const handleSubmit = async () => {
-    const { firstName, lastName, phoneNumber, clientBusinessDetail, clientEmail, channel, tags } = formData;
+    const { firstName, lastName, phoneNumber, clientBusinessDetail, clientEmail, channel } = formData;
 
     if (!channel) {
       toast.error('Please select a channel!');
@@ -138,16 +261,18 @@ function CreateContact({ toggleModal, contactToEdit = null, refreshContacts }) {
       const { channel, channelId, ...rest } = formData;
       fullData = {
         ...rest,
-        phoneNumber: formattedPhone, // Use formatted phone number
+        phoneNumber: formattedPhone,
         clientBusinessDetail: companyName,
+       tags: selectedTags.map(tag => tag.name) // Send only tag name
       };
     } else {
       const selectedChannel = channels.find((ch) => ch.type === channel);
       fullData = {
         ...formData,
-        phoneNumber: formattedPhone, // Use formatted phone number
+        phoneNumber: formattedPhone,
         channelId: selectedChannel?.channelId || null,
         clientBusinessDetail: companyName,
+       tags: selectedTags.map(tag => tag.name) // Send only tag name
       };
     }
 
@@ -180,10 +305,10 @@ function CreateContact({ toggleModal, contactToEdit = null, refreshContacts }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="fixed inset-0 bg-black opacity-70" onClick={toggleModal}></div>
-<div
-  className="bg-white max-h-[80vh] overflow-y-auto rounded-lg max-w-md w-full p-6 relative z-50 mx-4"
-  onClick={(e) => e.stopPropagation()}
->
+      <div
+        className="bg-white max-h-[80vh] overflow-y-auto rounded-lg max-w-md w-full p-6 relative z-50 mx-4"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex justify-between items-center border-b pb-3 mb-4">
           <h3 className="text-lg font-semibold text-gray-900">
             {contactToEdit ? 'Edit Contact' : 'Add New Contact'}
@@ -273,51 +398,32 @@ function CreateContact({ toggleModal, contactToEdit = null, refreshContacts }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">User Type Tags</label>
-            <div className="flex flex-wrap gap-1 mb-2">
-              {formData.tags.map((tag, idx) => (
-                <span
-                  key={idx}
-                  className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full flex items-center"
-                >
-                  {tag}
-                  <button
-                    type="button"
-                    className="ml-1 text-blue-500 hover:text-blue-700"
-                    onClick={() => handleRemoveTag(idx)}
-                  >
-                    &times;
-                  </button>
-                </span>
-              ))}
-            </div>
-            <div className="flex mt-1">
-              <input
-                type="text"
-                placeholder="Add tag"
-                className="w-full px-3 py-1.5 border border-gray-300 rounded-l-lg text-sm"
-                value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleAddTag();
-                  }
-                }}
-                disabled={isFormDisabled}
-              />
-              <button
-                type="button"
-                className={`px-3 py-1.5 text-sm rounded-r-lg ${isFormDisabled
-                  ? 'bg-gray-200 cursor-not-allowed'
-                  : 'bg-blue-200 hover:bg-blue-300'
-                  }`}
-                onClick={handleAddTag}
-                disabled={isFormDisabled}
-              >
-                Add
-              </button>
-            </div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Tags</label>
+            <MultiSelectTags 
+              initialSelectedTags={selectedTags}
+              onTagsChange={setSelectedTags}
+              availableTags={availableTags}
+              isLoading={isLoadingTags}
+              disabled={isFormDisabled}
+            />
+            
+            {/* Display selected tags preview */}
+            {selectedTags.length > 0 && (
+              <div className="mt-2">
+                <h3 className="text-sm font-medium text-gray-700 mb-1">Selected Tags:</h3>
+                <div className="flex flex-wrap gap-2">
+                  {selectedTags.map(tag => (
+                    <span 
+                      key={tag._id}
+                      className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs"
+                    >
+                      <span className="mr-1">{tag.favicon}</span>
+                      {tag.name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="flex justify-end">

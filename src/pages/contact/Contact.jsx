@@ -13,6 +13,17 @@ import { exportToCSV } from "../../utils/exportToCSV";
 import Loader from "../../component/Loader";
 import ImportContactModal from "../../component/modal/ImportContactModal";
 
+
+
+
+
+
+
+
+
+
+
+
 const ITEMS_PER_PAGE = 5;
 
 const Contacts = () => {
@@ -39,6 +50,40 @@ const Contacts = () => {
     const [hoveredTagIndex, setHoveredTagIndex] = useState(null);
     const [tagSearch, setTagSearch] = useState('');
     const [debouncedTagSearch, setDebouncedTagSearch] = useState('');
+
+
+
+
+    const [allTags, setAllTags] = useState([]);
+const [selectedTags, setSelectedTags] = useState([]);
+
+useEffect(() => {
+  if (hoveredTagContact) {
+    setSelectedTags(hoveredTagContact.tags || []);
+  }
+}, [hoveredTagContact]);
+
+
+
+const toggleTag = (tagName) => {
+  setSelectedTags((prev) =>
+    prev.includes(tagName)
+      ? prev.filter((tag) => tag !== tagName)
+      : [...prev, tagName]
+  );
+};
+
+const saveTagsToContact = async (contactId) => {
+  try {
+    await axios.patch(`/api/contacts/${contactId}`, {
+      tags: selectedTags,
+    });
+    // Update UI or refetch contacts as needed
+    setHoveredTagContact(null);
+  } catch (err) {
+    console.error("Failed to save tags", err);
+  }
+};
 
     // 2. Debounce the tag search input:
     useEffect(() => {
@@ -101,6 +146,7 @@ const Contacts = () => {
         const [responseData] = await useAxios("GET", `tags?search=${encodeURIComponent(search)}`, token);
         if (responseData && responseData.data && Array.isArray(responseData.data.tags)) {
             setTags(responseData.data.tags);
+            setAllTags(responseData.data.tags);
         }
         setTagsLoading(false);
     };
@@ -199,31 +245,40 @@ const Contacts = () => {
         }
     };
 
-    const addTag = async (contactId) => {
-        const tag = newTag.trim();
-        if (!tag) return;
+  const addTag = async (contactId) => {
+  if (!selectedTags || selectedTags.length === 0) return;
 
-        try {
-            const updatedTags = [...(hoveredTagContact.tags || []), tag];
-            const payload = { "tags": updatedTags };
-            const [responseData] = await useAxios('PATCH', `contacts/${contactId}`, token, payload);
-            if (responseData) {
-                setData(prevData =>
-                    prevData.map(contact =>
-                        contact._id === contactId
-                            ? { ...contact, tags: updatedTags }
-                            : contact
-                    )
-                );
-                getContact(debouncedSearch, selectedChannel, false);
-                setHoveredTagContact(prev => ({ ...prev, tags: updatedTags }));
-                setNewTag("");
-                toast.success("Tag added successfully", { autoClose: 2000 });
-            }
-        } catch (error) {
-            toast.error("Failed to add tag", { autoClose: 2000 });
-        }
-    };
+  try {
+    const updatedTags = [...selectedTags]; // ✅ Correct way to copy selectedTags
+    const payload = { tags: updatedTags };
+
+    const [responseData] = await useAxios(
+      'PATCH',
+      `contacts/${contactId}`,
+      token,
+      payload
+    );
+
+    if (responseData) {
+      // Update local contact state
+      setData(prevData =>
+        prevData.map(contact =>
+          contact._id === contactId
+            ? { ...contact, tags: updatedTags }
+            : contact
+        )
+      );
+
+      getContact(debouncedSearch, selectedChannel, false); // Optional: refetch
+      setHoveredTagContact(prev => ({ ...prev, tags: updatedTags }));
+      toast.success("Tags updated successfully", { autoClose: 2000 });
+    }
+  } catch (error) {
+    console.error(error);
+    toast.error("Failed to update tags", { autoClose: 2000 });
+  }
+};
+
 
     // Tag delete logic
     const handleDeleteTag = async () => {
@@ -597,65 +652,90 @@ const Contacts = () => {
 
             {/* Tag Modal */}
             {hoveredTagContact && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center">
-                    <div
-                        className="fixed inset-0 bg-black opacity-70"
-                        onClick={() => setHoveredTagContact(null)}
-                    ></div>
-                    <div
-                        ref={tagModalRef}
-                        className="bg-white rounded-lg max-w-md w-full p-6 relative z-50 mx-4"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <div className="flex justify-between items-center mb-4">
-                            <h4 className="font-medium text-lg">Manage Tags</h4>
-                            <button
-                                onClick={() => setHoveredTagContact(null)}
-                                className="text-gray-500 hover:text-gray-700"
-                            >
-                                <Close fontSize="small" />
-                            </button>
-                        </div>
-                        <div className="mb-3 max-h-40 overflow-y-auto">
-                            {hoveredTagContact.tags?.length > 0 ? (
-                                <div className="flex flex-wrap gap-2">
-                                    {hoveredTagContact.tags.map((tag, idx) => (
-                                        <span
-                                            key={idx}
-                                            className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
-                                        >
-                                            {tag}
-                                            <Close
-                                                fontSize="small"
-                                                className="ml-1 cursor-pointer text-blue-600 hover:text-blue-800"
-                                                onClick={() => removeTag(hoveredTagContact._id, tag)}
-                                            />
-                                        </span>
-                                    ))}
-                                </div>
-                            ) : (
-                                <p className="text-gray-500 text-sm">No tags yet</p>
-                            )}
-                        </div>
-                        <div className="flex">
-                            <input
-                                type="text"
-                                value={newTag}
-                                onChange={(e) => setNewTag(e.target.value)}
-                                placeholder="Add new tag we23"
-                                className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-l focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                onKeyPress={(e) => e.key === 'Enter' && addTag(hoveredTagContact._id)}
-                            />
-                            <button
-                                onClick={() => addTag(hoveredTagContact._id)}
-                                className="px-3 py-2 text-sm bg-blue-500 text-white rounded-r hover:bg-blue-600"
-                            >
-                                Add
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+  <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div
+      className="fixed inset-0 bg-black opacity-70"
+      onClick={() => setHoveredTagContact(null)}
+    ></div>
+
+    <div
+      ref={tagModalRef}
+      className="bg-white rounded-lg max-w-md w-full p-6 relative z-50 mx-4"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="flex justify-between items-center mb-4">
+        <h4 className="font-medium text-lg">Manage Tags</h4>
+        <button
+          onClick={() => setHoveredTagContact(null)}
+          className="text-gray-500 hover:text-gray-700"
+        >
+          <Close fontSize="small" />
+        </button>
+      </div>
+
+      {/* Selected Tags Display */}
+      <div className="mb-3 max-h-40 overflow-y-auto">
+        {selectedTags.length > 0 ? (
+          <div className="flex flex-wrap gap-2">
+            {selectedTags.map((tag, idx) => (
+              <span
+                key={idx}
+                className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+              >
+                {tag}
+                <Close
+                  fontSize="small"
+                  className="ml-1 cursor-pointer text-blue-600 hover:text-blue-800"
+                  onClick={() => toggleTag(tag)}
+                />
+              </span>
+            ))}
+          </div>
+        ) : (
+          <p className="text-gray-500 text-sm">No tags yet</p>
+        )}
+      </div>
+
+      {/* Multi-Select Tag Picker */}
+      <div className="mb-4 border border-gray-300 rounded px-3 py-2">
+        <div className="flex flex-wrap gap-2">
+          {allTags.map((tag) => {
+            const isSelected = selectedTags.includes(tag.name);
+            return (
+              <div
+                key={tag._id}
+                onClick={() => toggleTag(tag.name)}
+                className={`flex items-center text-sm border px-2 py-1 rounded cursor-pointer ${
+                  isSelected
+                    ? "bg-blue-100 text-blue-700 border-blue-300"
+                    : "hover:bg-gray-100"
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={isSelected}
+                  onChange={() => {}}
+                  className="mr-2"
+                />
+                {tag.favicon} {tag.name}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="flex justify-end">
+        <button
+          onClick={() => addTag(hoveredTagContact._id)}
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+        >
+          Save Tags
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
 
             {isModalOpen && (
                 <CreateContact
