@@ -5,7 +5,7 @@ import { ContentContext } from '../../context/ContextProvider';
 import getToken from '../../utils/GetToken';
 import useAxios from '../../utils/useAxios';
 
-function CreateTeam({ toggleModal, contactToEdit = null }) {
+function CreateTeam({ toggleModal, onTeamCreated, contactToEdit = null }) {
   const { userInfo } = useContext(ContentContext);
   const token = getToken();
   const [admin, setAdmin] = useState([])
@@ -13,8 +13,24 @@ function CreateTeam({ toggleModal, contactToEdit = null }) {
   const [formData, setFormData] = useState({
     teamName: '',
     members: [],
-
   });
+
+  // Prefill form if editing
+  useEffect(() => {
+    if (contactToEdit) {
+      setFormData({
+        teamName: contactToEdit.teamName || '',
+        members: Array.isArray(contactToEdit.members)
+          ? contactToEdit.members.map(m => typeof m === 'string' ? m : m._id)
+          : [],
+      });
+    } else {
+      setFormData({
+        teamName: '',
+        members: [],
+      });
+    }
+  }, [contactToEdit]);
 
   useEffect(() => {
     const getTeam = async () => {
@@ -22,7 +38,6 @@ function CreateTeam({ toggleModal, contactToEdit = null }) {
         const [responseData, fetchError] = await useAxios('GET', 'users/get-company-admins', token);
 
         if (responseData) {
-          console.log('responseData', responseData.data.users)
           setAdmin(responseData.data.users)
         } else {
           toast.error(fetchError?.message || `Error fetching Data`, {
@@ -37,8 +52,7 @@ function CreateTeam({ toggleModal, contactToEdit = null }) {
     }
 
     getTeam()
-  }, [])
-
+  }, [token])
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -48,7 +62,7 @@ function CreateTeam({ toggleModal, contactToEdit = null }) {
   const handleSubmit = async () => {
     const { teamName, members } = formData;
 
-    if (!teamName || !members) {
+    if (!teamName || !members || members.length === 0) {
       toast.error('Please fill in all fields!');
       return;
     }
@@ -56,13 +70,31 @@ function CreateTeam({ toggleModal, contactToEdit = null }) {
     try {
       setLoading(true);
 
-      const [responseData, fetchError] = await useAxios('POST', 'teams', token, formData);
+      let responseData, fetchError;
+      if (contactToEdit && contactToEdit._id) {
+        // Edit mode: PATCH
+        [responseData, fetchError] = await useAxios(
+          'PATCH',
+          `teams/${contactToEdit._id}`,
+          token,
+          formData
+        );
+      } else {
+        // Add mode: POST
+        [responseData, fetchError] = await useAxios(
+          'POST',
+          'teams',
+          token,
+          formData
+        );
+      }
 
       if (responseData) {
-        toast.success(`Team created successfully!`, { autoClose: 2000 });
+        toast.success(`Team ${contactToEdit ? 'updated' : 'created'} successfully!`, { autoClose: 2000 });
         toggleModal();
+        onTeamCreated();
       } else {
-        toast.error(fetchError?.message || `Team creation failed`, {
+        toast.error(fetchError?.message || `Team ${contactToEdit ? 'update' : 'creation'} failed`, {
           autoClose: 2000,
         });
       }
@@ -83,29 +115,25 @@ function CreateTeam({ toggleModal, contactToEdit = null }) {
       >
         <div className="flex justify-between items-center border-b pb-3 mb-4">
           <h3 className="text-lg font-semibold text-gray-900">
-            {contactToEdit ? 'Edit Contact' : 'Add New Contact'}
+            {contactToEdit ? 'Edit Team' : 'Add New Team'}
           </h3>
           <button onClick={toggleModal} className="text-gray-400 hover:text-gray-600">
             <i className="fa-solid fa-times"></i>
           </button>
         </div>
 
-        <form className="space-y-2" onSubmit={(e) => e.preventDefault()}>
+        <form className="space-y-2" onSubmit={e => e.preventDefault()}>
 
-          {[
-            { label: 'Team Name', name: 'teamName' },
-          ].map(({ label, name }, i) => (
-            <div key={i}>
-              <label className="block text-sm font-medium text-gray-700">{label}</label>
-              <input
-                name={name}
-                value={formData[name]}
-                onChange={handleChange}
-                type="text"
-                className={`w-full px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent `}
-              />
-            </div>
-          ))}
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Team Name</label>
+            <input
+              name="teamName"
+              value={formData.teamName}
+              onChange={handleChange}
+              type="text"
+              className="w-full px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700">Select Users</label>
@@ -156,15 +184,13 @@ function CreateTeam({ toggleModal, contactToEdit = null }) {
             })}
           </div>
 
-
           <div className="flex justify-end">
             <button
               type="button"
               onClick={handleSubmit}
-              className={`px-4 py-2 text-white rounded bg-blue-500 hover:bg-blue-600 '
-                }`}
+              className="px-4 py-2 text-white rounded bg-blue-500 hover:bg-blue-600"
             >
-              {loading ? 'Processing...' : 'Create Team'}
+              {loading ? (contactToEdit ? 'Updating...' : 'Processing...') : (contactToEdit ? 'Update Team' : 'Create Team')}
             </button>
           </div>
         </form>
