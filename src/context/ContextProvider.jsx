@@ -1,7 +1,8 @@
 import { createContext, useState, useCallback } from 'react';
 import axios from 'axios';
 import logo from '../assets/images/logo.png'
-
+import useAxios from '../utils/useAxios';
+import getToken from '../utils/GetToken';
 export const ContentContext = createContext();
 
 export const ContextProvider = ({ children }) => {
@@ -13,7 +14,8 @@ export const ContextProvider = ({ children }) => {
   const [secondaryThemeColor, setSecondaryThemeColor] = useState('#1e3a8a');
   const [customizationModal, setCustomizationModal] = useState(false);
   const [userInfo, setUserInfo] = useState([])
-
+  const [companyInfo, setCompanyInfo] = useState({})
+  const token = getToken();
   const saveContentToServer = useCallback(async (nodeId, content) => {
     if (!currentFlowId) return;
 
@@ -26,6 +28,17 @@ export const ContextProvider = ({ children }) => {
       console.error('Error saving content:', error);
     }
   }, [currentFlowId]);
+
+      const getUserInfo = async () => {
+      try {
+        const [responseData, fetchError] = await useAxios('GET', 'users', token);
+        if (responseData) {
+          setUserInfo(responseData.data.user);
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    };
 
   const setContentForNode = useCallback((nodeId, contentItems) => {
     const processedContent = contentItems.map(item => {
@@ -74,7 +87,8 @@ export const ContextProvider = ({ children }) => {
       customizationModal,
       setCustomizationModal,
       userInfo,
-      setUserInfo
+      setUserInfo,
+      getUserInfo
     }}>
       {children}
     </ContentContext.Provider>
