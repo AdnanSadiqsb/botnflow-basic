@@ -148,8 +148,8 @@ const Settings = () => {
                 <div className="max-w-7xl mx-auto">
                     {/* Page Header */}
                     <div className="mb-6">
-                        <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Profile Management</h1>
-                        <p className="text-gray-600 dark:text-gray-300 mt-1">Manage your account settings and preferences</p>
+                        <h1 className="text-2xl font-bold text-gray-800 ">Profile Management</h1>
+                        <p className=" dark:text-gray-600 mt-1">Manage your account settings and preferences</p>
                     </div>
 
                     <div className="border-b border-gray-200 dark:border-gray-700 mb-6">

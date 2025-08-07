@@ -21,7 +21,7 @@ function AppContent() {
   const [showSidebar, setShowSidebar] = useState(true);
   const [isSidebarHovered, setIsSidebarHovered] = useState(false);
   const [screenSize, setScreenSize] = useState('desktop');
-  const { setUserInfo, customizationModal, setCustomizationModal,setThemeColor,setSecondaryThemeColor } = useContext(ContentContext);
+  const { setUserInfo, customizationModal, userInfo, setCustomizationModal,setThemeColor,setSecondaryThemeColor } = useContext(ContentContext);
 
 
   const validToken = isTokenValid(token);

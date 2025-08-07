@@ -93,12 +93,12 @@ function TeamManagement() {
     return (
         <div>
             <div className="space-y-6">
-                <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg overflow-hidden">
+                <div className="bg-white shadow-sm rounded-lg overflow-hidden">
                     <div className="p-6">
                         <div className="flex justify-between items-center mb-6">
                             <div>
-                                <h2 className="text-lg font-medium text-gray-800 dark:text-white">Team Management</h2>
-                                <p className="text-gray-600 dark:text-gray-300">Manage team and permissions</p>
+                                <h2 className="text-lg font-medium text-gray-800">Team Management</h2>
+                                <p className="text-gray-600">Manage team and permissions</p>
                             </div>
                             <button type="button" className="inline-flex items-center justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white focus:outline-none focus:ring-2 focus:ring-offset-2"
                                 onClick={handleTeamModal}
@@ -122,7 +122,7 @@ function TeamManagement() {
                                 </div>
                                 <input
                                     type="text"
-                                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                     placeholder="Search teams..."
                                     value={searchTerm}
                                     onChange={e => setSearchTerm(e.target.value)}
@@ -131,7 +131,7 @@ function TeamManagement() {
 
                             <div className="flex flex-wrap gap-2">
                                 <select
-                                    className="block w-full md:w-auto border border-gray-300 rounded-md bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 py-2 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                    className="block w-full md:w-auto border border-gray-300 rounded-md bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 py-2 px-3"
                                     value={roleFilter}
                                     onChange={e => setRoleFilter(e.target.value)}
                                 >
@@ -144,8 +144,8 @@ function TeamManagement() {
 
                         {/* Users Table */}
                         <div className="overflow-x-auto w-[245px] md:w-[740px] lg:w-auto">
-                            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                                <thead className="bg-gray-50 dark:bg-gray-700">
+                            <table className="min-w-full divide-y divide-gray-200">
+                                <thead className="bg-gray-50">
                                     <tr>
                                         <th scope="col" className="px-6 py-3 text-left text-sm font-bold text-gray-500 uppercase tracking-wider">
                                             Team ID
@@ -164,7 +164,7 @@ function TeamManagement() {
                                         </th>
                                     </tr>
                                 </thead>
-                                <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
+                                <tbody className="bg-white divide-y divide-gray-200">
                                     {filteredTeams.map(team => (
                                         <tr key={team._id}>
                                             <td className="px-6 py-4 whitespace-nowrap">
@@ -184,14 +184,14 @@ function TeamManagement() {
                                                     {team?.companyId?.companyName}
                                                 </span>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                 {Array.isArray(team.members) && team.members.length > 0
                                                     ? `${team.members.length} Members`
                                                     : 'No Members'}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                                 <button
-                                                    className="dark:text-blue-400 dark:hover:text-blue-300 mr-3"
+                                                    className="mr-3"
                                                     style={{ color: themeColor }}
                                                     onMouseEnter={(e) => {
                                                         e.currentTarget.style.color = secondaryThemeColor;
@@ -206,7 +206,7 @@ function TeamManagement() {
                                                 >
                                                     <Edit />
                                                 </button>
-                                                <button className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                                                <button className="text-red-600 hover:text-red-900"
                                                     onClick={() => {
                                                         setSelectedTeamId(team._id);
                                                         setShowDeleteModal(true);

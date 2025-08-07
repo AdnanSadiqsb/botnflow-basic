@@ -191,7 +191,7 @@ getUserInfo()
                         </div>
 
                         {/* Available Integrations */}
-                        <div>
+                        <div className='mb-10'>
                             <h3 className="text-base font-medium text-gray-800 mb-4">Available Integrations</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {/* Google Calendar */}
