@@ -17,66 +17,60 @@ function TeamManagement() {
     const [selectedTeamId, setSelectedTeamId] = useState('')
     const [teamModal, setTeamModal] = useState(false)
     const [showDeleteModal, setShowDeleteModal] = useState(false)
-    const [allTeam, setAllTeam] = useState([
-        {
-            id: 1,
-            name: "Sarah Johnson",
-            email: "sarah.johnson@example.com",
-            role: "Admin",
-            status: "Active",
-            lastActive: "Just now",
-            avatar: "https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-1.jpg"
-        },
-        {
-            id: 2,
-            name: "Michael Chen",
-            email: "michael.chen@example.com",
-            role: "Admin",
-            status: "Active",
-            lastActive: "2 hours ago",
-            avatar: "https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-2.jpg"
-        },
-        {
-            id: 3,
-            name: "Emily Davis",
-            email: "emily.davis@example.com",
-            role: "Developer",
-            status: "Active",
-            lastActive: "1 day ago",
-            avatar: "https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-3.jpg"
-        }
-    ]);
-
+    const [allTeam, setAllTeam] = useState([]);
     const [loading, setLoading] = useState(false)
+    const [searchTerm, setSearchTerm] = useState('');
+    const [roleFilter, setRoleFilter] = useState('');
+    const [contactToEdit, setContactToEdit] = useState(null);
     const token = getToken()
 
+    // Role options for API query
+    const roleOptions = [
+        { value: '', label: 'All Roles 🧑‍🤝‍🧑' },
+        { value: 'admin', label: 'Admin 👑' },
+        { value: 'superadmin', label: 'Super Admin 🦸' },
+        { value: 'masteradmin', label: 'Master Admin 🧙' },
+    ];
 
     const handleTeamModal = () => {
         setTeamModal(!teamModal)
     }
 
-    useEffect(() => {
-        const getTeam = async () => {
-            try {
-                const [responseData, fetchError] = await useAxios('GET', 'teams', token);
-
-                if (responseData) {
-                    console.log('responseData', responseData.data.teams)
-                    setAllTeam(responseData.data.teams)
-                } else {
-                    toast.error(fetchError?.message || `Error fetching Data`, {
-                        autoClose: 2000,
-                    });
-                }
-            } catch (err) {
-                toast.error(err.message || 'Something went wrong', { autoClose: 2000 });
-            } finally {
-                setLoading(false);
+    // Fetch teams with optional search and role param
+    const getTeam = async (search = '', role = '') => {
+        setLoading(true);
+        try {
+            let url = 'teams';
+            const params = [];
+            if (search) params.push(`search=${encodeURIComponent(search)}`);
+            if (role) params.push(`role=${encodeURIComponent(role)}`);
+            if (params.length) url += `?${params.join('&')}`;
+            const [responseData, fetchError] = await useAxios('GET', url, token);
+            if (responseData) {
+                setAllTeam(responseData.data.teams)
+            } else {
+                toast.error(fetchError?.message || `Error fetching Data`, {
+                    autoClose: 2000,
+                });
             }
+        } catch (err) {
+            toast.error(err.message || 'Something went wrong', { autoClose: 2000 });
+        } finally {
+            setLoading(false);
         }
+    }
 
+    useEffect(() => {
         getTeam()
     }, [])
+
+    // Fetch from API when searchTerm or roleFilter changes (debounced)
+    useEffect(() => {
+        const delayDebounce = setTimeout(() => {
+            getTeam(searchTerm, roleFilter);
+        }, 400);
+        return () => clearTimeout(delayDebounce);
+    }, [searchTerm, roleFilter]);
 
     const handleDelete = async () => {
         try {
@@ -84,15 +78,17 @@ function TeamManagement() {
             if (responseData) {
                 toast.success("Team Deleted Successfully", { autoClose: 2000 });
                 setShowDeleteModal(false);
-                // const [updatedData] = await useAxios('GET', 'contacts', token, null);
-                // if (updatedData) setData(updatedData.data.teams);
+                getTeam();
             } else {
-                toast.error( error.message || "Failed to delete Team", { autoClose: 2000 });
+                toast.error(error.message || "Failed to delete Team", { autoClose: 2000 });
             }
         } catch (error) {
             toast.error("Failed to delete Team", { autoClose: 2000 });
         }
     };
+
+    // No need to filter by role on frontend, API handles it
+    const filteredTeams = allTeam;
 
     return (
         <div>
@@ -124,15 +120,24 @@ function TeamManagement() {
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                     <SearchIcon className="text-gray-400" />
                                 </div>
-                                <input type="text" className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Search users..." />
+                                <input
+                                    type="text"
+                                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                    placeholder="Search teams..."
+                                    value={searchTerm}
+                                    onChange={e => setSearchTerm(e.target.value)}
+                                />
                             </div>
 
                             <div className="flex flex-wrap gap-2">
-                                <select className="block w-full md:w-auto border border-gray-300 rounded-md bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 py-2 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                                    <option value="">All Teams</option>
-                                    <option value="admin">Admin</option>
-                                    <option value="developer">Developer</option>
-                                    <option value="viewer">Viewer</option>
+                                <select
+                                    className="block w-full md:w-auto border border-gray-300 rounded-md bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 py-2 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                    value={roleFilter}
+                                    onChange={e => setRoleFilter(e.target.value)}
+                                >
+                                    {roleOptions.map(opt => (
+                                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                    ))}
                                 </select>
                             </div>
                         </div>
@@ -160,8 +165,8 @@ function TeamManagement() {
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
-                                    {allTeam.map(team => (
-                                        <tr key={team.id}>
+                                    {filteredTeams.map(team => (
+                                        <tr key={team._id}>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="flex items-center">
                                                     <span className="text-gray-600 px-2 inline-flex text-xs leading-5 rounded-full">
@@ -194,6 +199,10 @@ function TeamManagement() {
                                                     onMouseLeave={(e) => {
                                                         e.currentTarget.style.color = themeColor;
                                                     }}
+                                                    onClick={() => {
+                                                        setContactToEdit(team);
+                                                        setTeamModal(true);
+                                                    }}
                                                 >
                                                     <Edit />
                                                 </button>
@@ -214,7 +223,14 @@ function TeamManagement() {
                 </div>
             </div>
             {teamModal && (
-                <CreateTeam toggleModal={() => setTeamModal(!teamModal)} />
+                <CreateTeam
+                    toggleModal={() => {
+                        setTeamModal(false);
+                        setContactToEdit(null);
+                    }}
+                    onTeamCreated={() => getTeam(searchTerm, roleFilter)}
+                    contactToEdit={contactToEdit}
+                />
             )}
             {showDeleteModal && (
                 <DeleteModal onClose={() => setShowDeleteModal(false)} onDelete={handleDelete} />

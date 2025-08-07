@@ -119,7 +119,7 @@ function General() {
             gender: formData.gender,
             country: formData.country,
             timezoneOffset: formData.timezoneOffset,
-            // address: formData.address,
+            address: formData.address, // <-- add address here
             phoneNumber: formData.phoneNumber,
         };
 
@@ -223,7 +223,15 @@ function General() {
                                     </div>
                                     <div>
                                         <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
-                                        <input onChange={handleChange} type="email" id="email" name="email" value={formData.email} className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2 bg-white text-gray-900" />
+                                        <input
+                                            onChange={handleChange}
+                                            type="email"
+                                            id="email"
+                                            name="email"
+                                            value={formData.email}
+                                            disabled={!!formData.email}
+                                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2 bg-white text-gray-900"
+                                        />
                                     </div>
                                     <div>
                                         <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
@@ -258,6 +266,17 @@ function General() {
                                             <option value="gmt">GMT (UTC+0)</option>
                                             <option value="cet">Central European Time (UTC+1)</option>
                                         </select>
+                                    </div>
+                                    <div>
+                                        <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                                        <input
+                                            onChange={handleChange}
+                                            type="text"
+                                            id="address"
+                                            name="address"
+                                            value={formData.address}
+                                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2 bg-white text-gray-900"
+                                        />
                                     </div>
                                 </div>
                             </div>

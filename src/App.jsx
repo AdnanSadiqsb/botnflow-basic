@@ -21,7 +21,8 @@ function AppContent() {
   const [showSidebar, setShowSidebar] = useState(true);
   const [isSidebarHovered, setIsSidebarHovered] = useState(false);
   const [screenSize, setScreenSize] = useState('desktop');
-  const { setUserInfo, customizationModal, userInfo, setCustomizationModal } = useContext(ContentContext);
+  const { setUserInfo, customizationModal, setCustomizationModal,setThemeColor,setSecondaryThemeColor } = useContext(ContentContext);
+
 
   const validToken = isTokenValid(token);
 
@@ -83,6 +84,31 @@ function AppContent() {
         const [responseData, fetchError] = await useAxios('GET', 'users', token);
         if (responseData) {
           setUserInfo(responseData.data.user);
+          const brandColor = responseData.data.user.companyId.brandColor || '#1e3a8a';
+          setThemeColor(brandColor);
+
+          // Generate a secondary color (lighter shade of brandColor)
+          function lightenColor(color, percent) {
+            let num = parseInt(color.replace("#", ""), 16),
+              amt = Math.round(2.55 * percent),
+              R = (num >> 16) + amt,
+              G = (num >> 8 & 0x00FF) + amt,
+              B = (num & 0x0000FF) + amt;
+            return (
+              "#" +
+              (
+                0x1000000 +
+                (R < 255 ? (R < 1 ? 0 : R) : 255) * 0x10000 +
+                (G < 255 ? (G < 1 ? 0 : G) : 255) * 0x100 +
+                (B < 255 ? (B < 1 ? 0 : B) : 255)
+              )
+                .toString(16)
+                .slice(1)
+            );
+          }
+
+          const secondaryColor = lightenColor(brandColor, 30); // 30% lighter
+          setSecondaryThemeColor(secondaryColor);
         }
       } catch (error) {
         console.log(error);
