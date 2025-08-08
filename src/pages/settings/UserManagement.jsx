@@ -235,22 +235,16 @@ function UserManagement() {
     const getUsers = async (search = '', role = '') => {
         setLoading(true);
         try {
-            let url = 'users';
+            let url = 'users/get-company-admins';
             const params = [];
             if (search) params.push(`search=${encodeURIComponent(search)}`);
             if (role) params.push(`role=${encodeURIComponent(role)}`);
             if (params.length) url += `?${params.join('&')}`;
             const [responseData, fetchError] = await useAxios('GET', url, token);
-            if (responseData) {
-                // If API returns a single user object
-                if (responseData.data.user) {
-                    setUsers([responseData.data.user]);
-                } else if (Array.isArray(responseData.data.users)) {
-                    setUsers(responseData.data.users);
-                } else {
-                    setUsers([]);
-                }
+            if (responseData && responseData.data && Array.isArray(responseData.data.users)) {
+                setUsers(responseData.data.users);
             } else {
+                setUsers([]);
                 toast.error(fetchError?.message || `Error fetching users`, {
                     autoClose: 2000,
                 });
@@ -355,13 +349,15 @@ function UserManagement() {
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Country</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                         <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
                                     {users.length === 0 && (
                                         <tr>
-                                            <td colSpan={5} className="text-center py-6 text-gray-400">No users found.</td>
+                                            <td colSpan={7} className="text-center py-6 text-gray-400">No users found.</td>
                                         </tr>
                                     )}
                                     {users.map(user => (
@@ -372,8 +368,7 @@ function UserManagement() {
                                                         <img className="h-10 w-10 rounded-full" src={user.profilePicture || 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-1.jpg'} alt="" />
                                                     </div>
                                                     <div className="ml-4">
-                                                        <div className="text-sm font-medium text-gray-900">{user.firstName} {user.lastName}</div>
-                                                        <div className="text-sm text-gray-500">{user.email}</div>
+                                                        <div className="text-sm font-medium text-gray-900">{user.firstName || user.username || 'N/A'} {user.lastName || ''}</div>
                                                     </div>
                                                 </div>
                                             </td>
@@ -383,10 +378,18 @@ function UserManagement() {
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                <span className="text-xs text-gray-700">{user.phoneNumber}</span>
+                                                <span className="text-xs text-gray-700">{user.phoneNumber || 'N/A'}</span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                <span className="text-xs text-gray-700">{user.country}</span>
+                                                <span className="text-xs text-gray-700">{user.country || 'N/A'}</span>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <span className="text-xs text-gray-700">{user.email || 'N/A'}</span>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <span className={`text-xs font-semibold ${user.isActive ? 'text-green-600' : 'text-red-600'}`}>
+                                                    {user.isActive ? 'Active' : 'Inactive'}
+                                                </span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                                 <button
