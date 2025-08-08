@@ -298,244 +298,245 @@ function Channels() {
         setDisconnectConfirmModalOpen(false);
     };
 
-    return (
-        <div>
-            <div className="space-y-6">
-                <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg overflow-hidden">
-                    <div className="p-6">
-                        <h2 className="text-lg font-medium text-gray-800 dark:text-white mb-4">Communication Channels</h2>
-                        <p className="text-gray-600 dark:text-gray-300 mb-6">Configure your messaging channels and sender settings</p>
+return (
+    <div>
+        <div className="space-y-6 mb-10">
+            <div className="bg-white shadow-sm rounded-lg overflow-hidden">
+                <div className="p-6">
+                    <h2 className="text-lg font-medium text-gray-800 mb-4">Communication Channels</h2>
+                    <p className="text-gray-600 mb-6">Configure your messaging channels and sender settings</p>
 
-                        {/* SMS Channel */}
-                        <div className="border-t border-gray-200 dark:border-gray-600 pt-4 mb-6">
-                            <div className="flex items-center justify-between mb-4">
-                                <div className="flex items-center">
-                                    <CommentIcon className="text-xl text-gray-700 dark:text-gray-300 mr-3" />
-                                    <h3 className="text-base font-medium text-gray-800 dark:text-white">SMS</h3>
-                                </div>
-                                <div className="flex items-center">
-                                    <span className={`mr-3 text-sm ${smsActive ? 'text-green-600' : 'text-gray-500'} font-medium`}>
-                                        {smsActive ? 'Active' : 'Inactive'}
-                                    </span>
-                                    <Switch
-                                        checked={smsActive}
-                                        onChange={() => setSmsActive(!smsActive)}
-                                        color="primary"
-                                    />
-                                </div>
+                    {/* SMS Channel */}
+                    <div className="border-t border-gray-200 pt-4 mb-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center">
+                                <CommentIcon className="text-xl text-gray-700 mr-3" />
+                                <h3 className="text-base font-medium text-gray-800">SMTP SMS</h3>
                             </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                <div>
-                                    <label htmlFor="smsName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Sender ID</label>
-                                    <input
-                                        type="text"
-                                        id="smsName"
-                                        name="smsName"
-                                        value={smsSenderId}
-                                        onChange={(e) => setSmsSenderId(e.target.value)}
-                                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                    />
-                                </div>
-                                <div>
-                                    <label htmlFor="smsApiKey" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">API Key</label>
-                                    <div className="relative">
-                                        <input
-                                            type={showSmsApiKey ? "text" : "password"}
-                                            id="smsApiKey"
-                                            name="smsApiKey"
-                                            value={smsApiKey}
-                                            onChange={(e) => setSmsApiKey(e.target.value)}
-                                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                        />
-                                        <button
-                                            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-600 dark:text-gray-300"
-                                            onClick={() => setShowSmsApiKey(!showSmsApiKey)}
-                                        >
-                                            {showSmsApiKey ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
-                                        </button>
-                                    </div>
-                                </div>
+                            <div className="flex items-center">
+                                <span className={`mr-3 text-sm ${smsActive ? 'text-green-600' : 'text-gray-500'} font-medium`}>
+                                    {smsActive ? 'Active' : 'Inactive'}
+                                </span>
+                                <Switch
+                                    checked={smsActive}
+                                    onChange={() => setSmsActive(!smsActive)}
+                                    color="primary"
+                                />
                             </div>
                         </div>
 
-                        {/* WhatsApp Channel */}
-                        <div className="border-t border-gray-200 dark:border-gray-600 pt-4 mb-6">
-                            <div className="flex items-center justify-between mb-4">
-                                <div className="flex items-center">
-                                    <CommentIcon className="text-xl text-gray-700 dark:text-gray-300 mr-3" />
-                                    <h3 className="text-base font-medium text-gray-800 dark:text-white">WhatsApp</h3>
-                                </div>
-                                <div className="flex items-center">
-                                    <span className={`mr-3 text-sm ${whatsappActive ? 'text-green-600' : 'text-gray-500'} font-medium`}>
-                                        {whatsappActive ? 'Active' : 'Inactive'}
-                                    </span>
-                                    <Switch
-                                        checked={whatsappActive}
-                                        onChange={() => setWhatsappActive(!whatsappActive)}
-                                        color="primary"
-                                    />
-                                </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label htmlFor="smsName" className="block text-sm font-medium text-gray-700 mb-1">Sender ID</label>
+                                <input
+                                    type="text"
+                                    id="smsName"
+                                    name="smsName"
+                                    value={smsSenderId}
+                                    onChange={(e) => setSmsSenderId(e.target.value)}
+                                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2"
+                                />
                             </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                <div>
-                                    <label htmlFor="waNumber" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Business Phone Number</label>
+                            <div>
+                                <label htmlFor="smsApiKey" className="block text-sm font-medium text-gray-700 mb-1">API Key</label>
+                                <div className="relative">
                                     <input
-                                        type="text"
-                                        id="waNumber"
-                                        name="waNumber"
-                                        value={whatsappNumber}
-                                        onChange={(e) => setWhatsappNumber(e.target.value)}
-                                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                        type={showSmsApiKey ? "text" : "password"}
+                                        id="smsApiKey"
+                                        name="smsApiKey"
+                                        value={smsApiKey}
+                                        onChange={(e) => setSmsApiKey(e.target.value)}
+                                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2 pr-10"
                                     />
-                                </div>
-                                <div>
-                                    <label htmlFor="waApiKey" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">API Key</label>
-                                    <div className="relative">
-                                        <input
-                                            type={showWhatsappApiKey ? "text" : "password"}
-                                            id="waApiKey"
-                                            name="waApiKey"
-                                            value={whatsappApiKey}
-                                            onChange={(e) => setWhatsappApiKey(e.target.value)}
-                                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                        />
-                                        <button
-                                            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-600 dark:text-gray-300"
-                                            onClick={() => setShowWhatsappApiKey(!showWhatsappApiKey)}
-                                        >
-                                            {showWhatsappApiKey ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
-                                        </button>
-                                    </div>
+                                    <button
+                                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-600"
+                                        onClick={() => setShowSmsApiKey(!showSmsApiKey)}
+                                    >
+                                        {showSmsApiKey ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
+                                    </button>
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-                        {/* Email Channel */}
-                        <div className="border-t border-gray-200 dark:border-gray-600 pt-4 mb-6">
-                            <div className="flex items-center justify-between mb-4">
-                                <div className="flex items-center">
-                                    <EmailIcon className="text-xl text-gray-700 dark:text-gray-300 mr-3" />
-                                    <h3 className="text-base font-medium text-gray-800 dark:text-white">Email</h3>
-                                </div>
-                                <div className="flex items-center">
-                                    <span className={`mr-3 text-sm ${emailActive ? 'text-green-600' : 'text-gray-500'} font-medium`}>
-                                        {emailActive ? 'Active' : 'Inactive'}
-                                    </span>
-                                    <Switch
-                                        checked={emailActive}
-                                        onChange={() => setEmailActive(!emailActive)}
-                                        color="primary"
-                                    />
-                                </div>
+                    {/* WhatsApp Channel */}
+                    <div className="border-t border-gray-200 pt-4 mb-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center">
+                                <CommentIcon className="text-xl text-gray-700 mr-3" />
+                                <h3 className="text-base font-medium text-gray-800">WhatsApp</h3>
                             </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                <div>
-                                    <label htmlFor="emailFrom" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">From Email</label>
-                                    <input
-                                        type="email"
-                                        id="emailFrom"
-                                        name="emailFrom"
-                                        value={emailFrom}
-                                        onChange={(e) => setEmailFrom(e.target.value)}
-                                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                    />
-                                </div>
-                                <div>
-                                    <label htmlFor="emailName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">From Name</label>
-                                    <input
-                                        type="text"
-                                        id="emailName"
-                                        name="emailName"
-                                        value={emailName}
-                                        onChange={(e) => setEmailName(e.target.value)}
-                                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                    />
-                                </div>
+                            <div className="flex items-center">
+                                <span className={`mr-3 text-sm ${whatsappActive ? 'text-green-600' : 'text-gray-500'} font-medium`}>
+                                    {whatsappActive ? 'Active' : 'Inactive'}
+                                </span>
+                                <Switch
+                                    checked={whatsappActive}
+                                    onChange={() => setWhatsappActive(!whatsappActive)}
+                                    color="primary"
+                                />
                             </div>
                         </div>
 
-                        {/* Voice Channel */}
-                        <div className="border-t border-gray-200 dark:border-gray-600 pt-4">
-                            <div className="flex items-center justify-between mb-4">
-                                <div className="flex items-center">
-                                    <PhoneIcon className="text-xl text-gray-700 dark:text-gray-300 mr-3" />
-                                    <h3 className="text-base font-medium text-gray-800 dark:text-white">Voice</h3>
-                                </div>
-                                <div className="flex items-center">
-                                    <span className={`mr-3 text-sm ${voiceActive ? 'text-green-600' : 'text-gray-500'} font-medium`}>
-                                        {voiceActive ? 'Active' : 'Inactive'}
-                                    </span>
-                                    <Switch
-                                        checked={voiceActive}
-                                        onChange={() => setVoiceActive(!voiceActive)}
-                                        color="primary"
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label htmlFor="waNumber" className="block text-sm font-medium text-gray-700 mb-1">Business Phone Number</label>
+                                <input
+                                    type="text"
+                                    id="waNumber"
+                                    name="waNumber"
+                                    value={whatsappNumber}
+                                    onChange={(e) => setWhatsappNumber(e.target.value)}
+                                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2"
+                                />
+                            </div>
+                            <div>
+                                <label htmlFor="waApiKey" className="block text-sm font-medium text-gray-700 mb-1">API Key</label>
+                                <div className="relative">
+                                    <input
+                                        type={showWhatsappApiKey ? "text" : "password"}
+                                        id="waApiKey"
+                                        name="waApiKey"
+                                        value={whatsappApiKey}
+                                        onChange={(e) => setWhatsappApiKey(e.target.value)}
+                                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2 pr-10"
                                     />
+                                    <button
+                                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-600"
+                                        onClick={() => setShowWhatsappApiKey(!showWhatsappApiKey)}
+                                    >
+                                        {showWhatsappApiKey ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
+                                    </button>
                                 </div>
                             </div>
+                        </div>
+                    </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                <div>
-                                    <label htmlFor="voiceNumber" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone Number</label>
+                    {/* Email Channel */}
+                    <div className="border-t border-gray-200 pt-4 mb-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center">
+                                <EmailIcon className="text-xl text-gray-700 mr-3" />
+                                <h3 className="text-base font-medium text-gray-800">Email</h3>
+                            </div>
+                            <div className="flex items-center">
+                                <span className={`mr-3 text-sm ${emailActive ? 'text-green-600' : 'text-gray-500'} font-medium`}>
+                                    {emailActive ? 'Active' : 'Inactive'}
+                                </span>
+                                <Switch
+                                    checked={emailActive}
+                                    onChange={() => setEmailActive(!emailActive)}
+                                    color="primary"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label htmlFor="emailFrom" className="block text-sm font-medium text-gray-700 mb-1">From Email</label>
+                                <input
+                                    type="email"
+                                    id="emailFrom"
+                                    name="emailFrom"
+                                    value={emailFrom}
+                                    onChange={(e) => setEmailFrom(e.target.value)}
+                                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2"
+                                />
+                            </div>
+                            <div>
+                                <label htmlFor="emailName" className="block text-sm font-medium text-gray-700 mb-1">From Name</label>
+                                <input
+                                    type="text"
+                                    id="emailName"
+                                    name="emailName"
+                                    value={emailName}
+                                    onChange={(e) => setEmailName(e.target.value)}
+                                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Voice Channel */}
+                    <div className="border-t border-gray-200 pt-4">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center">
+                                <PhoneIcon className="text-xl text-gray-700 mr-3" />
+                                <h3 className="text-base font-medium text-gray-800">Voice</h3>
+                            </div>
+                            <div className="flex items-center">
+                                <span className={`mr-3 text-sm ${voiceActive ? 'text-green-600' : 'text-gray-500'} font-medium`}>
+                                    {voiceActive ? 'Active' : 'Inactive'}
+                                </span>
+                                <Switch
+                                    checked={voiceActive}
+                                    onChange={() => setVoiceActive(!voiceActive)}
+                                    color="primary"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label htmlFor="voiceNumber" className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                                <input
+                                    type="text"
+                                    id="voiceNumber"
+                                    name="voiceNumber"
+                                    placeholder="Enter phone number"
+                                    value={voiceNumber}
+                                    onChange={(e) => setVoiceNumber(e.target.value)}
+                                    className={`block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2 ${!voiceActive ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    disabled={!voiceActive}
+                                />
+                            </div>
+                            <div>
+                                <label htmlFor="voiceApiKey" className="block text-sm font-medium text-gray-700 mb-1">API Key</label>
+                                <div className="relative">
                                     <input
-                                        type="text"
-                                        id="voiceNumber"
-                                        name="voiceNumber"
-                                        placeholder="Enter phone number"
-                                        value={voiceNumber}
-                                        onChange={(e) => setVoiceNumber(e.target.value)}
-                                        className={`block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${!voiceActive ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        type={showVoiceApiKey ? "text" : "password"}
+                                        id="voiceApiKey"
+                                        name="voiceApiKey"
+                                        placeholder="Enter API key"
+                                        value={voiceApiKey}
+                                        onChange={(e) => setVoiceApiKey(e.target.value)}
+                                        className={`block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2 pr-10 ${!voiceActive ? 'opacity-50 cursor-not-allowed' : ''}`}
                                         disabled={!voiceActive}
                                     />
-                                </div>
-                                <div>
-                                    <label htmlFor="voiceApiKey" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">API Key</label>
-                                    <div className="relative">
-                                        <input
-                                            type={showVoiceApiKey ? "text" : "password"}
-                                            id="voiceApiKey"
-                                            name="voiceApiKey"
-                                            placeholder="Enter API key"
-                                            value={voiceApiKey}
-                                            onChange={(e) => setVoiceApiKey(e.target.value)}
-                                            className={`block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${!voiceActive ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                            disabled={!voiceActive}
-                                        />
-                                        <button
-                                            className={`absolute inset-y-0 right-0 pr-3 flex items-center ${!voiceActive ? 'text-gray-400' : 'text-gray-600 dark:text-gray-300'}`}
-                                            onClick={() => setShowVoiceApiKey(!showVoiceApiKey)}
-                                            disabled={!voiceActive}
-                                        >
-                                            {showVoiceApiKey ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
-                                        </button>
-                                    </div>
+                                    <button
+                                        className={`absolute inset-y-0 right-0 pr-3 flex items-center ${!voiceActive ? 'text-gray-400' : 'text-gray-600'}`}
+                                        onClick={() => setShowVoiceApiKey(!showVoiceApiKey)}
+                                        disabled={!voiceActive}
+                                    >
+                                        {showVoiceApiKey ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
+                                    </button>
                                 </div>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <div className="px-6 py-3 bg-gray-50 dark:bg-gray-700 text-right">
-                        <button
-                            type="button"
-                            className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white focus:outline-none focus:ring-2 focus:ring-offset-2"
-                            onClick={handleSaveChanges}
-                            style={{ backgroundColor: themeColor }}
-                            onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = secondaryThemeColor;
-                            }}
-                            onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = themeColor;
-                            }}
-                        >
-                            Save Changes
-                        </button>
-                    </div>
+                <div className="px-6 py-3 bg-gray-50 text-right">
+                    <button
+                        type="button"
+                        className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white focus:outline-none focus:ring-2 focus:ring-offset-2"
+                        onClick={handleSaveChanges}
+                        style={{ backgroundColor: themeColor }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = secondaryThemeColor;
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = themeColor;
+                        }}
+                    >
+                        Save Changes
+                    </button>
                 </div>
             </div>
         </div>
-    )
+    </div>
+);
+
 }
 
 export default Channels

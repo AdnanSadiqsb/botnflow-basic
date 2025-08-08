@@ -185,6 +185,7 @@ getUserInfo()
                                         </div>
                                     </div>
                                 )}
+                                
                                 {/* Example: Other active integrations */}
                                 {/* ...existing active integrations... */}
                             </div>
