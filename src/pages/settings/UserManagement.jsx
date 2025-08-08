@@ -116,7 +116,7 @@ function UserModal({ open, onClose, onUserSaved, userToEdit }) {
             if (isEdit) {
                 [responseData, fetchError] = await useAxios(
                     'PATCH',
-                    `users/${userToEdit._id}`,
+                    `users`,
                     token,
                     dataToSend,
                     profileFile ? { headers: { 'Content-Type': 'multipart/form-data' } } : undefined
@@ -242,7 +242,14 @@ function UserManagement() {
             if (params.length) url += `?${params.join('&')}`;
             const [responseData, fetchError] = await useAxios('GET', url, token);
             if (responseData) {
-                setUsers(responseData.data.users || []);
+                // If API returns a single user object
+                if (responseData.data.user) {
+                    setUsers([responseData.data.user]);
+                } else if (Array.isArray(responseData.data.users)) {
+                    setUsers(responseData.data.users);
+                } else {
+                    setUsers([]);
+                }
             } else {
                 toast.error(fetchError?.message || `Error fetching users`, {
                     autoClose: 2000,
