@@ -11,7 +11,7 @@ import useAxios from '../../utils/useAxios';
 import getToken from '../../utils/GetToken';
 import DeleteModal from '../../component/modal/DeleteModal';
 import { toast } from 'react-toastify';
-
+import MiniLoader from "../../component/MiniLoader";
 function TeamManagement() {
     const { themeColor, secondaryThemeColor } = useContext(ContentContext)
     const [selectedTeamId, setSelectedTeamId] = useState('')
@@ -38,7 +38,7 @@ function TeamManagement() {
 
     // Fetch teams with optional search and role param
     const getTeam = async (search = '', role = '') => {
-        setLoading(true);
+        
         try {
             let url = 'teams';
             const params = [];
@@ -60,9 +60,16 @@ function TeamManagement() {
         }
     }
 
+
     useEffect(() => {
-        getTeam()
-    }, [])
+      const fetchUsers = async () => {
+        setLoading(true);
+        await getTeam();
+        setLoading(false);
+      };
+    
+      fetchUsers();
+    }, []);
 
     // Fetch from API when searchTerm or roleFilter changes (debounced)
     useEffect(() => {
@@ -143,11 +150,14 @@ function TeamManagement() {
                         </div>
 
                         {/* Users Table */}
-                        <div className="overflow-x-auto w-[245px] md:w-[740px] lg:w-auto">
-                            <table className="min-w-full divide-y divide-gray-200">
-                                <thead className="bg-gray-50">
-                                    <tr>
-                                        <th scope="col" className="px-6 py-3 text-left text-sm font-bold text-gray-500 uppercase tracking-wider">
+                        {loading ? (
+                            <MiniLoader />
+                        ) : (
+                            <div className="overflow-x-auto w-[245px] md:w-[740px] lg:w-auto">
+                                <table className="min-w-full divide-y divide-gray-200">
+                                    <thead className="bg-gray-50">
+                                        <tr>
+                                            <th scope="col" className="px-6 py-3 text-left text-sm font-bold text-gray-500 uppercase tracking-wider">
                                             Team ID
                                         </th>
                                         <th scope="col" className="px-6 py-3 text-left text-sm font-bold text-gray-500 uppercase tracking-wider">
@@ -219,6 +229,8 @@ function TeamManagement() {
                                 </tbody>
                             </table>
                         </div>
+                        )
+                    }
                     </div>
                 </div>
             </div>

@@ -125,11 +125,12 @@ const saveTagsToContact = async (contactId) => {
     }, [searchTerm]);
 
     // Fetch contacts
-    const getContact = async (search = '', channel = '', showLoading = false) => {
+    const getContact = async (search = '', channel = '', showLoading = false, tag = '') => {
         if (showLoading) setLoading(true);
         const params = [];
         if (search) params.push(`search=${encodeURIComponent(search)}`);
         if (channel) params.push(`channel=${encodeURIComponent(channel)}`);
+        if (tag) params.push(`tag=${encodeURIComponent(tag)}`);
         const query = params.length ? `?${params.join('&')}` : '';
         const [responseData, fetchError] = await useAxios('GET', `contacts${query}`, token, null);
         if (responseData) {
@@ -145,6 +146,7 @@ const saveTagsToContact = async (contactId) => {
         setTagsLoading(true);
         const [responseData] = await useAxios("GET", `tags?search=${encodeURIComponent(search)}`, token);
         if (responseData && responseData.data && Array.isArray(responseData.data.tags)) {
+            
             setTags(responseData.data.tags);
             setAllTags(responseData.data.tags);
         }
@@ -304,6 +306,19 @@ const saveTagsToContact = async (contactId) => {
         return <Loader />;
     }
 
+    // Add "All Contacts" pseudo-tag at the top
+    const tagsWithAll = [{ name: "All Contacts", contactCount: data.length, favicon: "🧑‍🤝‍🧑" }, ...tags];
+
+    // Tag click handler
+    const handleTagClick = (tagName, index) => {
+        setActiveTagIndex(index);
+        if (tagName === "All Contacts") {
+            getContact(debouncedSearch, selectedChannel, false); // No tag filter
+        } else {
+            getContact(debouncedSearch, selectedChannel, false, tagName);
+        }
+    };
+
     return (
         <div className="min-h-screen mt-16 bg-gray-50 font-sans">
             <div className="mb-6 p-3">
@@ -345,17 +360,17 @@ const saveTagsToContact = async (contactId) => {
 
                         <div className="p-2 space-y-2">
                             
-                            {!tags.length ? (
+                            {!tagsWithAll.length ? (
                                 <div className="text-center text-gray-400 py-8 text-sm">No groups found</div>
                             ) : (
-                                tags.map((group, index) => (
+                                tagsWithAll.map((group, index) => (
                                     <div
-                                        key={index}
+                                        key={group.name + index}
                                         className={`group-item rounded-lg p-3 cursor-pointer flex justify-between items-center transition-colors duration-150 ${activeTagIndex === index
                                                 ? "bg-blue-600 text-white"
                                                 : "bg-white text-gray-900 hover:bg-gray-50"
                                             }`}
-                                        onClick={() => setActiveTagIndex(index)}
+                                        onClick={() => handleTagClick(group.name, index)}
                                         onMouseEnter={() => setHoveredTagIndex(index)}
                                         onMouseLeave={() => setHoveredTagIndex(null)}
                                     >
@@ -366,7 +381,7 @@ const saveTagsToContact = async (contactId) => {
                                             </p>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            {hoveredTagIndex === index && (
+                                            {group.name !== "All Contacts" && hoveredTagIndex === index && (
                                                 <span
                                                     className="ml-2"
                                                     onClick={e => {

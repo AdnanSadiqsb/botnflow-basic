@@ -9,7 +9,7 @@ import {
 import useAxios from '../../utils/useAxios';
 import getToken from '../../utils/GetToken';
 import { toast } from 'react-toastify';
-
+import MiniLoader from "../../component/MiniLoader";
 // Resources for invite
 const resourceOptions = [
     "Analytics",
@@ -95,7 +95,7 @@ function InviteUserModal({ open, onClose, onInvited }) {
             toast.error('Please fill all fields!');
             return;
         }
-        setLoading(true);
+        
         try {
             const token = getToken();
             const [responseData, fetchError] = await useAxios(
@@ -420,9 +420,15 @@ function UserManagement() {
         }
     };
 
-    useEffect(() => {
-        getUsers();
-    }, []);
+useEffect(() => {
+  const fetchUsers = async () => {
+    setLoading(true);
+    await getUsers();
+    setLoading(false);
+  };
+
+  fetchUsers();
+}, []);
 
     // Debounced search and filter
     useEffect(() => {
@@ -514,6 +520,9 @@ function UserManagement() {
                         </div>
 
                         {/* Users Table */}
+                                         {loading ? (
+                            <MiniLoader />
+                        ) : (
                         <div className="overflow-x-auto w-[245px] md:w-[740px] lg:w-auto">
                             <table className="min-w-full divide-y divide-gray-200">
                                 <thead className="bg-gray-50">
@@ -527,6 +536,7 @@ function UserManagement() {
                                         <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                     </tr>
                                 </thead>
+                
                                 <tbody className="bg-white divide-y divide-gray-200">
                                     {users.length === 0 && (
                                         <tr>
@@ -584,8 +594,10 @@ function UserManagement() {
                                         </tr>
                                     ))}
                                 </tbody>
+                      
                             </table>
                         </div>
+                          )}
                     </div>
                 </div>
             </div>

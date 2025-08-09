@@ -13,7 +13,7 @@ import getToken from '../../utils/GetToken';
 import { toast } from 'react-toastify';
 
 function Channels() {
-    const { themeColor, secondaryThemeColor } = useContext(ContentContext);
+    const { themeColor, secondaryThemeColor, userInfo, getUserInfo} = useContext(ContentContext);
     const token = getToken();
 
     // Modal state
@@ -23,12 +23,7 @@ function Channels() {
     const [loading, setLoading] = useState(false);
 
     // Company channels from backend
-    const [companyChannels, setCompanyChannels] = useState([
-        { type: "twilio", channelId: "68516579b5e80164e8afed3e", _id: "6851657a89f52017ce797c4d" },
-        { type: "whatsapp", channelId: "685176129f3bf18c37e3e6bc", _id: "6851761289f52017ce797d90" },
-        { type: "webchat", channelId: "6868ce6049b18c222795cd4c", _id: "6868ce608eda478a86363818" },
-        { type: "smtp", channelId: "689598e80f478e244e0b7eed", _id: "689598e98b0c9537512aa11f" }
-    ]);
+    const [companyChannels, setCompanyChannels] = useState(userInfo.companyId?.companyIntegratedChannels || []);
 
     // Helper to check if channel exists
     const getChannel = (type) => companyChannels.find(c => c.type === type);
@@ -46,6 +41,13 @@ function Channels() {
             );
             if (responseData) {
                 toast.success(`${type.charAt(0).toUpperCase() + type.slice(1)} channel toggled`);
+                // Update local state for isActive
+                getUserInfo();
+                setCompanyChannels(prev =>
+                    prev.map(c =>
+                        c.type === type ? { ...c, isActive: !c.isActive } : c
+                    )
+                );
             }
         } catch (error) {
             toast.error('Failed to toggle channel');
@@ -215,6 +217,7 @@ function Channels() {
             );
             if (responseData) {
                 toast.success(`${modalType.charAt(0).toUpperCase() + modalType.slice(1)} channel ${method === 'POST' ? 'created' : 'updated'} successfully`);
+                getUserInfo()
                 setModalOpen(false);
             }
         } catch (error) {
@@ -232,6 +235,7 @@ function Channels() {
             desc: 'Send and receive SMS & voice calls using Twilio.',
             connect: () => openChannelModal('twilio'),
             active: !!getChannel('twilio'),
+            isActive: getChannel('twilio')?.isActive,
             toggle: () => handleToggleActive('twilio'),
         },
         {
@@ -241,6 +245,7 @@ function Channels() {
             desc: 'Send and receive WhatsApp messages using your business number.',
             connect: () => openChannelModal('whatsapp'),
             active: !!getChannel('whatsapp'),
+            isActive: getChannel('whatsapp')?.isActive,
             toggle: () => handleToggleActive('whatsapp'),
         },
         {
@@ -250,6 +255,7 @@ function Channels() {
             desc: 'Chat with your users directly on your website.',
             connect: () => openChannelModal('webchat'),
             active: !!getChannel('webchat'),
+            isActive: getChannel('webchat')?.isActive,
             toggle: () => handleToggleActive('webchat'),
         },
         {
@@ -259,6 +265,7 @@ function Channels() {
             desc: 'Send notifications and updates via email.',
             connect: () => openChannelModal('smtp'),
             active: !!getChannel('smtp'),
+            isActive: getChannel('smtp')?.isActive,
             toggle: () => handleToggleActive('smtp'),
         },
         // Coming soon channels
@@ -278,6 +285,13 @@ function Channels() {
         },
     ];
 
+    // Sort: active channels first, then inactive, then coming soon
+    const sortedChannelCards = [
+        ...channelCards.filter(card => card.active && card.isActive),
+        ...channelCards.filter(card => card.active && !card.isActive),
+        ...channelCards.filter(card => card.comingSoon),
+    ];
+
     return (
         <div>
             <div className="space-y-6 mb-10">
@@ -285,7 +299,7 @@ function Channels() {
                     <div className="p-6">
                         <h2 className="text-lg font-medium text-gray-800 mb-4">Available Channels</h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {channelCards.map((card, idx) => (
+                            {sortedChannelCards.map((card, idx) => (
                                 <div key={card.type} className="border rounded-lg p-4 hover:shadow-md transition-shadow bg-white flex flex-col justify-between">
                                     <div>
                                         <div className="flex items-center mb-3">
@@ -314,10 +328,10 @@ function Channels() {
                                                         e.currentTarget.style.color = themeColor;
                                                     }}
                                                 >
-                                                    {card.active ? "View" : <>Connect <ArrowForwardIcon className="ml-1" fontSize="small" /></>}
+                                                    {card.active ? "View Configuration" : <>Connect <ArrowForwardIcon className="ml-1" fontSize="small" /></>}
                                                 </button>
                                                 <Switch
-                                                    checked={card.active}
+                                                    checked={card.isActive}
                                                     onChange={card.toggle}
                                                     color="primary"
                                                     disabled={!card.active || loading}
