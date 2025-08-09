@@ -69,7 +69,7 @@ const Settings = () => {
     const [anchorElUser, setAnchorElUser] = useState(null);
     const [anchorElLang, setAnchorElLang] = useState(null);
     const [currentTab, setCurrentTab] = useState('general');
-    const [sidebarOpen, setSidebarOpen] = useState(true);
+    const [innerUserTab, setInnerUserTab] = useState('user-management'); // for inner tab
 
     const [smsActive, setSmsActive] = useState(true);
     const [smsSenderId, setSmsSenderId] = useState('CPAAS');
@@ -134,8 +134,7 @@ const Settings = () => {
         { id: 'general', label: 'General' },
         { id: 'channels', label: 'Channels' },
         { id: 'integrations', label: 'Integrations' },
-        { id: 'user-management', label: 'User Management' },
-        { id: 'team-management', label: 'Team Management' },
+        { id: 'users', label: 'Users & Teams' }, // merged tab
         { id: 'billing', label: 'Billing' },
     ];
 
@@ -195,19 +194,43 @@ const Settings = () => {
                         <Integration />
                     )}
 
-                    {/* Tab Content: User Management */}
-                    {currentTab === 'user-management' && (
-                        <UserManagement />
-                    )}
-
-                    {/* Tab Content: User Management */}
-                    {currentTab === 'team-management' && (
-                        <TeamManagement />
-                    )}
-
                     {/* Tab Content: Billing */}
                     {currentTab === 'billing' && (
                         <Billing />
+                    )}
+
+                    {/* Tab Content: Users & Teams */}
+                    {currentTab === 'users' && (
+                        <div>
+                            <div className="border-b border-gray-200 mb-4">
+                                <div className="flex">
+                                    <button
+                                        className={`py-2 px-4 font-medium text-sm border-b-2 transition-colors duration-200 ${
+                                            innerUserTab === 'user-management'
+                                                ? 'border-blue-600 text-blue-600'
+                                                : 'border-transparent text-gray-500'
+                                        }`}
+                                        onClick={() => setInnerUserTab('user-management')}
+                                    >
+                                        User Management
+                                    </button>
+                                    <button
+                                        className={`py-2 px-4 font-medium text-sm border-b-2 transition-colors duration-200 ${
+                                            innerUserTab === 'team-management'
+                                                ? 'border-blue-600 text-blue-600'
+                                                : 'border-transparent text-gray-500'
+                                        }`}
+                                        onClick={() => setInnerUserTab('team-management')}
+                                    >
+                                        Team Management
+                                    </button>
+                                </div>
+                            </div>
+                            <div>
+                                {innerUserTab === 'user-management' && <UserManagement />}
+                                {innerUserTab === 'team-management' && <TeamManagement />}
+                            </div>
+                        </div>
                     )}
                 </div>
             </main>

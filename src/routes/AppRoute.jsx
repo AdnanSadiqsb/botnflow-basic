@@ -21,6 +21,7 @@ import Flow from '../pages/ReactFlow/Flow';
 import BroadCast from '../pages/broadcast/BroadCast';
 import AiAgentList from '../pages/aiAgent/AiAgentList';
 import APICredential from '../pages/apiCredential/APICredential';
+import InviteUser from '../pages/inviteuser/InviteUser';
 import LeadGeneration from '../pages/leadgeneration/LeadGeneration';
 import EmailVerification from '../component/auth/EmailVerification ';
 
@@ -52,6 +53,8 @@ function AppRoute() {
         <Route path="/call-logs" element={<CallLogs />} />
         <Route path="/call-queue" element={<CallQueue />} />
         <Route path="/setting" element={<Settings />} />
+         <Route path="/inviteuser" element={<InviteUser />} />
+        
         <Route path="/api-credential" element={<APICredential />} />
       </Routes>
   );
