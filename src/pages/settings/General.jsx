@@ -10,8 +10,11 @@ import useAxios from '../../utils/useAxios';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import { lightenColor } from '../../assets/Colors';
+import UploadFileIcon from '@mui/icons-material/UploadFile';
+import logo from '../../assets/images/logo.png'
 function General() {
     const { userInfo, themeColor, secondaryThemeColor, getUserInfo, setThemeColor, setSecondaryThemeColor } = useContext(ContentContext)
+    const [logoImage, setLogoImage] = useState(logo);
     const navigate = useNavigate();
     const [companyData, setCompanyData] = useState({
         language: userInfo.companyId?.language || 'en',
@@ -29,36 +32,43 @@ function General() {
         address: userInfo.address || '',
         profilePicture: userInfo.profilePicture || '',
     });
+    const handleLogoUpload = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const imageUrl = URL.createObjectURL(file);
+            setLogoImage(imageUrl);
+        }
+    }
 
 
-    
-        const handleColorChange = (e) => {
-            const selectedColor = e.target.value;
-    
-            // Convert hex to RGB
-            const hexToRgb = (hex) => {
-                const bigint = parseInt(hex.slice(1), 16);
-                const r = (bigint >> 16) & 255;
-                const g = (bigint >> 8) & 255;
-                const b = bigint & 255;
-                return { r, g, b };
-            };
-    
-            const { r, g, b } = hexToRgb(selectedColor);
-    
-            // Calculate brightness using a common formula
-            const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-    
-            // Reject colors that are too light (brightness > 240)
-            if (brightness > 180) {
-                // alert("Please choose a darker color. White or very light colors are not allowed.");
-                return;
-            }
-    
-            setThemeColor(selectedColor);
-            setSecondaryThemeColor(lightenColor(selectedColor));
-            console.log("Selected Color:", selectedColor);
+
+    const handleColorChange = (e) => {
+        const selectedColor = e.target.value;
+
+        // Convert hex to RGB
+        const hexToRgb = (hex) => {
+            const bigint = parseInt(hex.slice(1), 16);
+            const r = (bigint >> 16) & 255;
+            const g = (bigint >> 8) & 255;
+            const b = bigint & 255;
+            return { r, g, b };
         };
+
+        const { r, g, b } = hexToRgb(selectedColor);
+
+        // Calculate brightness using a common formula
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+
+        // Reject colors that are too light (brightness > 240)
+        if (brightness > 180) {
+            // alert("Please choose a darker color. White or very light colors are not allowed.");
+            return;
+        }
+
+        setThemeColor(selectedColor);
+        setSecondaryThemeColor(lightenColor(selectedColor));
+        console.log("Selected Color:", selectedColor);
+    };
 
     // Modal state for deactivation
     const [showDeactivateModal, setShowDeactivateModal] = useState(false);
@@ -68,7 +78,7 @@ function General() {
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
-        const handleCompanyChange = (e) => {
+    const handleCompanyChange = (e) => {
         const { name, value } = e.target;
         if (name === 'brandColor') {
             handleColorChange(e);
@@ -282,28 +292,28 @@ function General() {
                             </div>
                         </div>
                     </div>
-                          <div className="px-6 py-3 bg-gray-50 text-right">
-                    <button type="button" className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white focus:outline-none focus:ring-2 focus:ring-offset-2"
-                        style={{ backgroundColor: themeColor }}
-                        onClick={handleProfileUpdate}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = secondaryThemeColor;
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = themeColor;
-                        }}
-                    >
-                        Save Changes
-                    </button>
+                    <div className="px-6 py-3 bg-gray-50 text-right">
+                        <button type="button" className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white focus:outline-none focus:ring-2 focus:ring-offset-2"
+                            style={{ backgroundColor: themeColor }}
+                            onClick={handleProfileUpdate}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.backgroundColor = secondaryThemeColor;
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.backgroundColor = themeColor;
+                            }}
+                        >
+                            Save Changes
+                        </button>
+                    </div>
                 </div>
-                </div>
-          
+
             </div>
             {/* Brand Color & Language Settings */}
             <div className="bg-white shadow-sm rounded-lg overflow-hidden mt-5">
                 <div className="p-6">
                     <h2 className="text-lg font-medium text-gray-800 mb-4">Appearance Settings</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                         <div>
                             <label htmlFor="brandColor" className="block text-sm font-medium text-gray-700 mb-1">Brand Color</label>
                             <div className="flex">
@@ -324,6 +334,46 @@ function General() {
                             </select>
                             <p className="mt-1 text-sm text-gray-500">This setting affects the portal interface language</p>
                         </div>
+                        <div className="">
+                            <label htmlFor="logo" className="block text-sm font-medium text-gray-700 mb-1">Upload Logo:</label>
+
+                            <div className="flex flex-col">
+                                <label
+                                    htmlFor="logo"
+                                    className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 bg-white border border-gray-300 rounded-lg shadow-sm cursor-pointer hover:bg-gray-50 focus-within:ring-2 focus-within:ring-blue-500 transition"
+                                >
+                                    <UploadFileIcon className="w-4 h-4 text-blue-500" />
+                                    <span>Upload logo</span>
+                                </label>
+                                <input
+                                    type="file"
+                                    id="logo"
+                                    onChange={handleLogoUpload}
+                                    className="hidden"
+                                />
+                            </div>
+                        </div>
+<div>
+  <label
+    htmlFor="logo_image"
+    className="block text-sm font-medium text-gray-700 mb-1"
+  >
+    Logo
+  </label>
+
+  <div className="w-34 h-24 mt-2 mx-auto flex items-center justify-center border border-gray-300 rounded-lg bg-gray-50 overflow-hidden">
+    {logoImage ? (
+      <img
+        src={logoImage}
+        alt="Uploaded Logo"
+        className="w-full h-full object-contain"
+      />
+    ) : (
+      <span className="text-gray-400 text-sm font-medium">LOGO</span>
+    )}
+  </div>
+</div>
+
                     </div>
                 </div>
                 <div className="px-6 py-3 bg-gray-50 text-right">
@@ -405,7 +455,7 @@ function General() {
                 </div>
             )}
         </div>
-        
+
     )
 }
 
