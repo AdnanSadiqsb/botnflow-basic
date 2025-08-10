@@ -6,11 +6,12 @@ import {
   faBrain, faTags, faComment, faBolt, faFlask, faTimes, faPlay
 } from '@fortawesome/free-solid-svg-icons';
 import { ContentContext } from '../../context/ContextProvider';
+import IntentActionsEditor from './IntentActionsEditor';
 
 const AIAgent = () => {
   const { themeColor, secondaryThemeColor } = useContext(ContentContext)
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedIntent, setSelectedIntent] = useState(null);
+
   const [selectedLanguage, setSelectedLanguage] = useState('en');
   const [activeTab, setActiveTab] = useState('training');
   const [testMessage, setTestMessage] = useState('');
@@ -72,6 +73,7 @@ const AIAgent = () => {
       actions: []
     }
   ]);
+    const [selectedIntent, setSelectedIntent] = useState(intents[0]);
 
   const [newIntent, setNewIntent] = useState({
     name: '',
@@ -512,18 +514,9 @@ const AIAgent = () => {
               {/* Response Settings Tab */}
               {activeTab === 'responses' && (
                 <div className="space-y-4">
-                  <div className="md:flex justify-between items-center">
-                    <h3 className="text-lg font-medium text-gray-900">Response Configuration</h3>
-                    <select
-                      value={selectedLanguage}
-                      onChange={(e) => setSelectedLanguage(e.target.value)}
-                      className="px-3 py-2 border border-gray-300 rounded-lg"
-                    >
-                      <option value="en">English</option>
-                      <option value="es">Spanish</option>
-                      <option value="fr">French</option>
-                    </select>
-                  </div>
+                 
+
+                  <IntentActionsEditor />
 
                   <div className="space-y-4">
                     <div>
